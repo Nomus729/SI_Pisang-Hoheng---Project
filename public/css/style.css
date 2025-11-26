@@ -681,3 +681,195 @@ h2 {
 .swal2-container {
     z-index: 99999 !important;
 }
+/* =========================================
+   15. HALAMAN KERANJANG (CART STYLE)
+   ========================================= */
+.page-header {
+    background: #fff; padding: 15px 25px; border-radius: 15px;
+    font-weight: 800; font-size: 1.2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    margin-bottom: 25px; display: inline-block; color: #333;
+}
+
+.cart-layout {
+    display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px;
+}
+
+/* Kiri: List Item Container Biru */
+.cart-items-container {
+    background: #89CFF0; padding: 20px; border-radius: 20px;
+    display: flex; flex-direction: column; gap: 20px;
+}
+
+.cart-item-card {
+    background: #fff; padding: 15px; border-radius: 15px;
+    display: flex; align-items: center; gap: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.cart-img {
+    width: 100px; height: 80px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+}
+.cart-img img { width: 100%; height: 100%; object-fit: cover; }
+
+.cart-details { flex-grow: 1; }
+.cart-details h3 { font-size: 1.1rem; margin-bottom: 5px; }
+.cart-price { font-weight: bold; color: #333; margin-top: 5px; }
+
+.cart-toppings { display: flex; flex-wrap: wrap; gap: 5px; font-size: 0.8rem; }
+.topping-label { font-weight: 600; color: #666; margin-right: 5px; }
+.badge { background: #eee; padding: 2px 8px; border-radius: 5px; font-size: 0.75rem; color: #555; }
+
+.cart-actions-right {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+}
+.btn-trash { color: #ff6b6b; background: none; border: none; cursor: pointer; font-size: 1.1rem; }
+
+/* Kanan: Sidebar */
+.cart-sidebar {
+    background: #fdfdfd; padding: 25px; border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); height: fit-content;
+}
+
+.note-box { margin-bottom: 20px; }
+.note-box label { font-weight: 600; display: block; margin-bottom: 10px; }
+.note-box textarea {
+    width: 100%; height: 200px; padding: 15px; border: 1px solid #ddd;
+    border-radius: 15px; resize: none; font-family: inherit;
+}
+
+.cart-summary { border-top: 2px dashed #eee; padding-top: 20px; }
+.summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; color: #666; }
+.summary-row.total { font-weight: 800; color: #000; font-size: 1.2rem; margin: 15px 0; }
+
+.btn-checkout {
+    display: block; width: 100%; padding: 15px; background: #89CFF0;
+    color: white; text-align: center; border-radius: 12px;
+    font-weight: 700; transition: 0.3s;
+}
+.btn-checkout:hover { background: #7abce0; transform: translateY(-2px); }
+
+
+/* =========================================
+   16. HALAMAN CHECKOUT (PAYMENT)
+   ========================================= */
+.checkout-wrapper { max-width: 800px; margin: 0 auto; }
+
+.checkout-card-blue {
+    background: #89CFF0; padding: 30px; border-radius: 20px 20px 0 0;
+    color: #333;
+}
+
+.checkout-section {
+    background: #fff; padding: 25px; border-radius: 15px;
+    margin-bottom: 20px;
+}
+.checkout-section h3 { margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+
+/* Tabel Rincian */
+.order-table { width: 100%; font-size: 0.95rem; }
+.tbl-head, .tbl-row {
+    display: grid; grid-template-columns: 2fr 1fr 1.5fr; 
+    padding: 10px 0; border-bottom: 1px solid #eee;
+}
+.tbl-head { font-weight: 700; color: #666; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.total-row { border-top: 2px solid #333; border-bottom: none; margin-top: 10px; font-size: 1.1rem; }
+
+/* Pilihan Opsi (Radio Card) */
+.option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.option-card { cursor: pointer; position: relative; }
+.option-card input { display: none; } /* Sembunyikan radio asli */
+
+.card-content {
+    border: 2px solid #eee; border-radius: 12px; padding: 15px;
+    text-align: center; transition: 0.3s; color: #555;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.card-content i { font-size: 1.5rem; }
+
+/* Style saat dipilih */
+.option-card input:checked + .card-content {
+    border-color: #89CFF0; background: #eaf8ff; color: #000; font-weight: bold;
+}
+
+/* Input Alamat & QRIS */
+.address-box, .qris-box {
+    margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 10px; border: 1px dashed #ccc;
+}
+.address-box textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
+.shipping-fee { display: flex; justify-content: space-between; margin-top: 10px; }
+.qris-box { text-align: center; }
+.qris-box img { width: 150px; margin-top: 10px; border: 1px solid #ddd; padding: 5px; background: #fff; }
+
+/* Footer Checkout */
+.checkout-footer {
+    background: #34495e; /* Warna Gelap Kontras */
+    padding: 20px 30px; border-radius: 0 0 20px 20px;
+    display: flex; justify-content: space-between; align-items: center; color: #fff;
+}
+.btn-pay {
+    background: #fff; color: #34495e; padding: 12px 30px;
+    border-radius: 25px; border: none; font-weight: 800; cursor: pointer;
+    transition: 0.3s;
+}
+.btn-pay:hover { background: #eee; transform: scale(1.05); }
+
+@media (max-width: 768px) {
+    .cart-layout { grid-template-columns: 1fr; }
+}
+
+/* =========================================
+   17. TOMBOL KEMBALI & HEADER HALAMAN
+   ========================================= */
+
+.page-header-wrapper {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Tombol Kembali */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    color: #555;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border: 1px solid #eee;
+}
+
+.btn-back:hover {
+    background: #333;
+    color: #fff;
+    transform: translateX(-5px); /* Efek geser kiri */
+}
+
+/* Kotak Judul Halaman (Cart / Payment) */
+.page-title-box {
+    background: #fff;
+    padding: 10px 25px;
+    border-radius: 15px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #333;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Pastikan container turun kebawah karena header fixed */
+main.container {
+    /* Jika header menutupi konten, tambah margin-top disini khusus halaman selain home */
+    /* Tapi karena body sudah padding-top: 170px, harusnya aman */
+    position: relative;
+    z-index: 1;
+}

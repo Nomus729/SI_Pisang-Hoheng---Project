@@ -13,14 +13,26 @@ class User {
     }
 
     public function register() {
+        // Cek apakah email sudah ada
+        $checkQuery = "SELECT id FROM " . $this->table_name . " WHERE email = :email";
+        $checkStmt = $this->conn->prepare($checkQuery);
+        $checkStmt->bindParam(":email", $this->email);
+        $checkStmt->execute();
+        
+        if($checkStmt->rowCount() > 0){
+            return false; // Email duplikat
+        }
+
+        // Jika aman, masukkan data baru
         $query = "INSERT INTO " . $this->table_name . " SET nama_user=:name, email=:email, password=:pass, role='customer'";
         $stmt = $this->conn->prepare($query);
 
-        $this->password = password_hash($this->password, PASSWORD_DEFAULT);
+        // Enkripsi password
+        $hash = password_hash($this->password, PASSWORD_DEFAULT);
 
         $stmt->bindParam(":name", $this->nama_user);
         $stmt->bindParam(":email", $this->email);
-        $stmt->bindParam(":pass", $this->password);
+        $stmt->bindParam(":pass", $hash);
 
         return $stmt->execute();
     }
@@ -33,6 +45,7 @@ class User {
 
         if ($stmt->rowCount() > 0) {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Verifikasi Password (Hash vs Input)
             if (password_verify($this->password, $row['password'])) {
                 return $row;
             }

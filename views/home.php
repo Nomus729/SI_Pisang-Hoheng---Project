@@ -26,8 +26,11 @@
             </div>
 
             <div class="user-actions">
-                <a href="#" class="icon-link"><i class="fas fa-shopping-cart"></i></a>
-                
+               
+                <a href="index.php?action=cart" class="icon-link" id="cartBtn" 
+       data-login="<?= isset($_SESSION['nama_user']) ? 'true' : 'false' ?>">
+       <i class="fas fa-shopping-cart"></i>
+    </a>
                 <?php if(isset($_SESSION['nama_user'])): ?>
                     <span style="font-weight:bold; font-size: 0.9rem;">Hai, <?= $_SESSION['nama_user'] ?></span>
                     <a href="index.php?action=logout" class="btn-signin" style="background:#ff6b6b; color:white;">Logout</a>
@@ -49,6 +52,7 @@
     </header>
 
     <main class="container">
+       
        <section id="hero" class="hero-grid">
             <div class="hero-main card-blue">
                 <div class="hero-text">
@@ -84,31 +88,39 @@
             <h2>Daftar Menu</h2>
             <div class="menu-grid">
                 <?php foreach($data['menu_items'] as $item): ?>
-                <div class="menu-card">
-                    <div class="card-img">
-                        <img src="<?= $item['img'] ?>" alt="<?= $item['name'] ?>">
-                    </div>
-                    
-                    <div class="card-body">
-                        <h4><?= $item['name'] ?></h4>
-                        
-                        <div class="meta-info">
-                            <span class="pcs">100 pcs</span>
-                            <span class="rating">4.9 <i class="fas fa-star"></i></span>
-                        </div>
-                        
-                        <div class="card-actions">
-                            <div class="qty-control">
-                                <button class="btn-qty">-</button>
-                                <span class="qty-val">1</span>
-                                <button class="btn-qty">+</button>
-                            </div>
-                            <button class="cart-btn">
-                                <i class="fas fa-shopping-cart"></i>
-                            </button>
-                        </div>
-                    </div>
+               <div class="menu-grid">
+    <?php foreach($data['menu_items'] as $item): ?>
+    <div class="menu-card">
+        <div class="card-img">
+            <img src="<?= $item['img'] ?>" alt="<?= $item['name'] ?>">
+        </div>
+        
+        <div class="card-body">
+            <h4><?= $item['name'] ?></h4>
+            
+            <div class="meta-info">
+                <span class="pcs">100 pcs</span>
+                <span class="rating">4.9 <i class="fas fa-star"></i></span>
+            </div>
+            
+            <div class="card-actions">
+                <div class="qty-control">
+                    <button class="btn-qty btn-minus">-</button>
+                    <span class="qty-val">1</span>
+                    <button class="btn-qty btn-plus">+</button>
                 </div>
+
+                <button class="cart-btn add-to-cart-btn"
+                    data-name="<?= $item['name'] ?>"
+                    data-price="15000" 
+                    data-image="<?= $item['img'] ?>">
+                    <i class="fas fa-shopping-cart"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
                 <?php endforeach; ?>
             </div>
         </section>
@@ -146,13 +158,11 @@
                 <p class="subtitle">Welcome back!, Please enter your details</p>
                 
                 <form id="formLogin" action="index.php?action=login" method="POST">
-                    
                     <div class="input-group">
                         <label>Email</label>
                         <input type="email" name="email" class="email-input" placeholder="Enter your email" required>
                         <span class="error-text">Format email tidak valid</span>
                     </div>
-
                     <div class="input-group">
                         <label>Password</label>
                         <div class="password-wrapper">
@@ -160,18 +170,15 @@
                             <i class="fas fa-eye toggle-password"></i>
                         </div>
                     </div>
-                    
                     <div class="form-actions">
                         <a href="#" class="forgot-pass">Forgot Password?</a>
                     </div>
-
                     <button type="submit" class="btn-full-blue btn-submit">LOG IN</button>
                     <button type="button" class="btn-full-google">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20"> 
                         Sign In With Google
                     </button>
                 </form>
-
                 <p class="switch-text">Don't have an account? <a href="#" id="showRegister">Sign up for free</a></p>
             </div>
 
@@ -184,13 +191,11 @@
                         <label>Full Name</label>
                         <input type="text" name="name" placeholder="Enter your name" required>
                     </div>
-
                     <div class="input-group">
                         <label>Email</label>
                         <input type="email" name="email" class="email-input" placeholder="Enter your email" required>
                         <span class="error-text">Format email tidak valid</span>
                     </div>
-
                     <div class="input-group">
                         <label>Password</label>
                         <div class="password-wrapper">
@@ -198,10 +203,8 @@
                             <i class="fas fa-eye toggle-password"></i>
                         </div>
                     </div>
-
                     <button type="submit" class="btn-full-blue btn-submit">SIGN UP</button>
                 </form>
-
                 <p class="switch-text">Already have an account? <a href="#" id="showLogin">Log In</a></p>
             </div>
         </div>
@@ -212,14 +215,13 @@
              data-icon="<?= $_SESSION['flash_icon'] ?>" 
              data-title="<?= $_SESSION['flash_title'] ?>" 
              data-text="<?= $_SESSION['flash_text'] ?>"
-             /* TAMBAHAN: Kirim data modal ke JS */
              data-modal="<?= isset($_SESSION['keep_modal']) ? $_SESSION['keep_modal'] : '' ?>">
         </div>
         <?php 
             unset($_SESSION['flash_icon']);
             unset($_SESSION['flash_title']);
             unset($_SESSION['flash_text']);
-            unset($_SESSION['keep_modal']); // Hapus session agar tidak muncul terus
+            unset($_SESSION['keep_modal']);
         ?>
     <?php endif; ?>
 
