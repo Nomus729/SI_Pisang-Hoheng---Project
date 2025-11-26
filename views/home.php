@@ -175,7 +175,7 @@
                     </div>
                     <button type="submit" class="btn-full-blue btn-submit">LOG IN</button>
                     <button type="button" class="btn-full-google">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20"> 
+                        <img src="../public/img/googleIcon.png" width="20"> 
                         Sign In With Google
                     </button>
                 </form>
