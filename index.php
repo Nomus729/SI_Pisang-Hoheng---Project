@@ -6,9 +6,11 @@ ob_start(); // Mencegah error "Cannot modify header info"
 // 2. Load Controllers
 require_once 'controllers/HomeController.php';
 require_once 'controllers/AuthController.php';
+require_once 'controllers/AdminController.php';
 if (file_exists('controllers/CartController.php')) {
     require_once 'controllers/CartController.php';
 }
+
 
 // 3. Routing
 $action = isset($_GET['action']) ? $_GET['action'] : 'home';
@@ -50,7 +52,6 @@ switch ($action) {
         }
         break;
 
-
     case 'update_cart': // Routing Update
         if (class_exists('CartController')) {
             $cart = new CartController();
@@ -65,6 +66,10 @@ switch ($action) {
         }
         break;
 
+    case 'dashboard':
+        $admin = new AdminController();
+        $admin->dashboard();
+        break;
 
     default:
         $controller = new HomeController();

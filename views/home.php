@@ -26,14 +26,22 @@
             </div>
 
             <div class="user-actions">
-               
                 <a href="index.php?action=cart" class="icon-link" id="cartBtn" 
-       data-login="<?= isset($_SESSION['nama_user']) ? 'true' : 'false' ?>">
-       <i class="fas fa-shopping-cart"></i>
-    </a>
+                   data-login="<?= isset($_SESSION['nama_user']) ? 'true' : 'false' ?>">
+                   <i class="fas fa-shopping-cart"></i>
+                </a>
+                
                 <?php if(isset($_SESSION['nama_user'])): ?>
                     <span style="font-weight:bold; font-size: 0.9rem;">Hai, <?= $_SESSION['nama_user'] ?></span>
+                    
+                    <?php if(isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                        <a href="index.php?action=dashboard" class="btn-signin" style="background:#4CAF50; color:white;">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    <?php endif; ?>
+
                     <a href="index.php?action=logout" class="btn-signin" style="background:#ff6b6b; color:white;">Logout</a>
+                
                 <?php else: ?>
                     <button class="btn-signin" id="openLoginBtn">Sign In / Sign Up</button>
                 <?php endif; ?>

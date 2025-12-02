@@ -8,20 +8,13 @@ class AuthController {
         $db = $database->getConnection();
         $user = new User($db);
 
-        // Ambil data dari form
-        $email = isset($_POST['email']) ? $_POST['email'] : '';
-        $password = isset($_POST['password']) ? $_POST['password'] : '';
+        $user->email = $_POST['email'];
+        $user->password = $_POST['password'];
 
-        $user->email = $email;
-        $user->password = $password;
-
-        // Cek Login
         $loggedInUser = $user->login();
 
         if ($loggedInUser) {
-            // LOGIN SUKSES
-            // (Tidak perlu session_start lagi, sudah di index.php)
-            
+            session_start();
             $_SESSION['user_id'] = $loggedInUser['id'];
             $_SESSION['nama_user'] = $loggedInUser['nama_user'];
             $_SESSION['role'] = $loggedInUser['role'];
@@ -30,15 +23,18 @@ class AuthController {
             $_SESSION['flash_title'] = 'Login Berhasil!';
             $_SESSION['flash_text'] = 'Selamat datang, ' . $loggedInUser['nama_user'];
             
-            header("Location: index.php");
+            // --- LOGIKA REDIRECT BERDASARKAN ROLE ---
+            if ($loggedInUser['role'] === 'admin') {
+                header("Location: index.php?action=dashboard");
+            } else {
+                header("Location: index.php");
+            }
             exit();
         } else {
-            // LOGIN GAGAL
+            session_start();
             $_SESSION['flash_icon'] = 'error';
             $_SESSION['flash_title'] = 'Login Gagal!';
             $_SESSION['flash_text'] = 'Email atau Password salah.';
-            
-            // Sinyal agar modal terbuka lagi
             $_SESSION['keep_modal'] = 'login'; 
             
             header("Location: index.php");
