@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="public/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 </head>
 <body>
-
     <header class="main-header" id="mainHeader">
         <div class="header-content">
             <div class="logo">
@@ -19,49 +19,43 @@
                     <span class="brand-sub">By KNine</span>
                 </div>
             </div>
-            
             <div class="search-bar">
                 <input type="text" placeholder="Search...">
-                <button><i class="fas fa-search"></i></button>
+                <button>
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
-
             <div class="user-actions">
-                <a href="index.php?action=cart" class="icon-link" id="cartBtn" 
-                   data-login="<?= isset($_SESSION['nama_user']) ? 'true' : 'false' ?>">
-                   <i class="fas fa-shopping-cart"></i>
+                <a href="index.php?action=cart" class="icon-link" id="cartBtn" data-login="<?= isset($_SESSION['nama_user']) ? 'true' : 'false' ?>">
+                    <i class="fas fa-shopping-cart"></i>
                 </a>
-                
                 <?php if(isset($_SESSION['nama_user'])): ?>
                     <span style="font-weight:bold; font-size: 0.9rem;">Hai, <?= $_SESSION['nama_user'] ?></span>
-                    
                     <?php if(isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                         <a href="index.php?action=dashboard" class="btn-signin" style="background:#4CAF50; color:white;">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     <?php endif; ?>
-
                     <a href="index.php?action=logout" class="btn-signin" style="background:#ff6b6b; color:white;">Logout</a>
-                
                 <?php else: ?>
                     <button class="btn-signin" id="openLoginBtn">Sign In / Sign Up</button>
                 <?php endif; ?>
-                
-                <a href="#" class="icon-link"><i class="fas fa-user"></i></a>
+                <a href="#" class="icon-link">
+                    <i class="fas fa-user"></i>
+                </a>
             </div>
-
-           <nav class="nav-links">
+            <nav class="nav-links">
                 <a href="#hero" class="active">Home</a>
                 <a href="#menu">Menu</a>
                 <a href="#produk">Produk</a>
                 <a href="#contact">Contact</a>
-                <div class="nav-indicator"></div> 
+                <div class="nav-indicator"></div>
             </nav>
         </div>
     </header>
 
     <main class="container">
-       
-       <section id="hero" class="hero-grid">
+        <section id="hero" class="hero-grid">
             <div class="hero-main card-blue">
                 <div class="hero-text">
                     <h2>Produk Unggulan</h2>
@@ -77,7 +71,6 @@
                     <img src="<?= $data['hero_product']['image'] ?>" alt="Hero">
                 </div>
             </div>
-
             <div class="hero-side">
                 <div class="category-card card-cyan">
                     <h3>Kategori<br>Makanan</h3>
@@ -96,63 +89,66 @@
             <h2>Daftar Menu</h2>
             <div class="menu-grid">
                 <?php foreach($data['menu_items'] as $item): ?>
-               <div class="menu-grid">
-    <?php foreach($data['menu_items'] as $item): ?>
-    <div class="menu-card">
-        <div class="card-img">
-            <img src="<?= $item['img'] ?>" alt="<?= $item['name'] ?>">
-        </div>
-        
-        <div class="card-body">
-            <h4><?= $item['name'] ?></h4>
-            
-            <div class="meta-info">
-                <span class="pcs">100 pcs</span>
-                <span class="rating">4.9 <i class="fas fa-star"></i></span>
-            </div>
-            
-            <div class="card-actions">
-                <div class="qty-control">
-                    <button class="btn-qty btn-minus">-</button>
-                    <span class="qty-val">1</span>
-                    <button class="btn-qty btn-plus">+</button>
-                </div>
-
-                <button class="cart-btn add-to-cart-btn"
-                    data-name="<?= $item['name'] ?>"
-                    data-price="15000" 
-                    data-image="<?= $item['img'] ?>">
-                    <i class="fas fa-shopping-cart"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-    <?php endforeach; ?>
-</div>
+                    <div class="menu-card">
+                        <div class="card-img">
+                            <img src="uploads/<?= $item['gambar'] ?>" alt="<?= $item['nama_produk'] ?>" onerror="this.src='https://placehold.co/200x150'">
+                        </div>
+                        <div class="card-body">
+                            <h4><?= $item['nama_produk'] ?></h4>
+                            <div class="meta-info">
+                                <span class="pcs">100 pcs</span>
+                                <span class="rating">4.9 <i class="fas fa-star"></i></span>
+                            </div>
+                            <div class="card-actions">
+                                <div class="qty-control">
+                                    <button class="btn-qty btn-minus">-</button>
+                                    <span class="qty-val">1</span>
+                                    <button class="btn-qty btn-plus">+</button>
+                                </div>
+                                <button class="cart-btn add-to-cart-btn" 
+                                        data-name="<?= $item['nama_produk'] ?>" 
+                                        data-price="<?= $item['harga'] ?>" 
+                                        data-image="uploads/<?= $item['gambar'] ?>">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
+            </div>
+            <div class="pagination-container">
+                <?php for($i = 1; $i <= $data['pagination']['total_pages']; $i++): ?>
+                    <a href="index.php?halaman=<?= $i ?>#menu" class="page-link <?= ($i == $data['pagination']['current_page']) ? 'active' : '' ?>">
+                        <?= $i ?>
+                    </a>
+                <?php endfor; ?>
             </div>
         </section>
 
         <section id="produk" class="product-section reveal-on-scroll">
-            <h2>Produk</h2>
-            <div class="product-grid-alt">
-                <?php foreach($data['bottom_products'] as $prod): ?>
-                <div class="prod-card-fixed">
-                    <div class="prod-circle-img">
-                        <img src="<?= $prod['img'] ?>" alt="Produk">
-                    </div>
-                    <div class="prod-card-content">
-                        <h3>PISANG GORENG</h3>
-                        <ul class="prod-details">
-                            <li>- Pisang</li>
-                            <li>- Keju</li>
-                            <li>- Meses Coklat</li>
-                            <li>- Susu</li>
-                        </ul>
-                        <span class="prod-price">Price : Rp. 15.000</span>
-                    </div>
+            <h2>Produk Lainnya</h2>
+            <div class="swiper product-swiper">
+                <div class="swiper-wrapper">
+                    <?php foreach($data['all_products'] as $prod): ?>
+                        <div class="swiper-slide">
+                            <div class="prod-card-fixed">
+                                <div class="prod-circle-img">
+                                    <img src="uploads/<?= $prod['gambar'] ?>" alt="Produk" onerror="this.src='https://placehold.co/150x150?text=Produk'">
+                                </div>
+                                <div class="prod-card-content">
+                                    <h3><?= $prod['nama_produk'] ?></h3>
+                                    <div class="prod-details">
+                                        <?= $prod['deskripsi'] ?>
+                                    </div>
+                                    <span class="prod-price">
+                                        Rp <?= number_format($prod['harga'], 0, ',', '.') ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
+                <div class="swiper-pagination"></div>
             </div>
         </section>
     </main>
@@ -164,7 +160,6 @@
             <div class="form-box login-box" id="loginForm">
                 <h2>Welcome!</h2>
                 <p class="subtitle">Welcome back!, Please enter your details</p>
-                
                 <form id="formLogin" action="index.php?action=login" method="POST">
                     <div class="input-group">
                         <label>Email</label>
@@ -183,17 +178,17 @@
                     </div>
                     <button type="submit" class="btn-full-blue btn-submit">LOG IN</button>
                     <button type="button" class="btn-full-google">
-                        <img src="../public/img/googleIcon.png" width="20"> 
-                        Sign In With Google
+                        <img src="../public/img/googleIcon.png" width="20"> Sign In With Google
                     </button>
                 </form>
-                <p class="switch-text">Don't have an account? <a href="#" id="showRegister">Sign up for free</a></p>
+                <p class="switch-text">
+                    Don't have an account? <a href="#" id="showRegister">Sign up for free</a>
+                </p>
             </div>
 
             <div class="form-box register-box hidden" id="registerForm">
                 <h2>Create Account</h2>
                 <p class="subtitle">Join us and enjoy delicious snacks!</p>
-                
                 <form id="formRegister" action="index.php?action=register" method="POST">
                     <div class="input-group">
                         <label>Full Name</label>
@@ -213,7 +208,9 @@
                     </div>
                     <button type="submit" class="btn-full-blue btn-submit">SIGN UP</button>
                 </form>
-                <p class="switch-text">Already have an account? <a href="#" id="showLogin">Log In</a></p>
+                <p class="switch-text">
+                    Already have an account? <a href="#" id="showLogin">Log In</a>
+                </p>
             </div>
         </div>
     </div>
@@ -234,6 +231,9 @@
     <?php endif; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="public/js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="public/js/script.js"></script>
 </body>
 </html>

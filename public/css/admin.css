@@ -1,0 +1,76 @@
+/* Layout & Sidebar */
+/* RESET SEBELUMNYA (YANG BIKIN GAK BISA SCROLL) */
+/* body.admin-body { overflow: hidden; }  <-- INI PENYEBABNYA */
+
+/* UPDATE BARU (FIX SCROLL) */
+body.admin-body {
+    padding-top: 0;
+    background-color: #f4f4f4;
+    overflow-y: auto; /* Izinkan scroll vertikal */
+}
+
+.admin-layout {
+    display: flex;
+    min-height: 100vh; /* Gunakan min-height agar bisa memanjang */
+}
+
+/* Sidebar tetap fixed (diam) */
+.sidebar {
+    width: 260px;
+    background: #fff;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    padding: 20px;
+    position: fixed; 
+    top: 0; left: 0; bottom: 0; /* Full tinggi layar */
+    overflow-y: auto; /* Sidebar bisa discroll jika menu banyak */
+    z-index: 100;
+}
+
+/* Main Content bisa scroll */
+.main-content {
+    margin-left: 260px; /* Geser konten ke kanan sidebar */
+    flex: 1;
+    padding: 20px;
+    width: calc(100% - 260px); /* Pastikan lebar pas */
+    min-height: 100vh;
+}
+
+
+.sidebar { width: 260px; background: #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.05); padding: 20px; position: fixed; height: 100%; }
+.sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+.sidebar-header img { width: 40px; }
+.sidebar-header .brand { font-weight: 800; font-size: 1.1rem; }
+
+.menu-title { font-size: 0.8rem; color: #888; margin: 15px 0 5px 10px; font-weight: 600; text-transform: uppercase; }
+.menu-item { display: flex; align-items: center; gap: 10px; padding: 12px 15px; color: #555; text-decoration: none; border-radius: 10px; transition: 0.3s; }
+.menu-item:hover, .menu-item.active { background: #e3f2fd; color: #1976d2; font-weight: 600; }
+
+/* Main Content */
+.main-content { margin-left: 260px; flex: 1; padding: 20px; }
+.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: #fff; padding: 15px 30px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+.header-right { display: flex; align-items: center; gap: 20px; }
+
+/* Notifikasi Lonceng */
+.notif-wrapper { position: relative; cursor: pointer; }
+.notif-wrapper i { font-size: 1.2rem; color: #555; }
+.notif-badge { position: absolute; top: -5px; right: -5px; background: #ff4d4d; color: white; font-size: 0.7rem; padding: 2px 5px; border-radius: 50%; }
+.notif-dropdown { position: absolute; top: 40px; right: 0; width: 250px; background: #fff; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 100; overflow: hidden; }
+.notif-header { padding: 10px; background: #f8f9fa; font-weight: bold; border-bottom: 1px solid #eee; }
+.notif-body { padding: 10px; max-height: 200px; overflow-y: auto; }
+.notif-item { padding: 8px; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; }
+.notif-item:hover { background: #f9f9f9; }
+
+/* Card & Table Style */
+.card-box { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-bottom: 20px; }
+.table-custom { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.table-custom th { text-align: left; padding: 12px; background: #f8f9fa; color: #666; font-weight: 600; }
+.table-custom td { padding: 12px; border-bottom: 1px solid #eee; }
+.btn-action { padding: 5px 10px; border-radius: 5px; color: #fff; text-decoration: none; font-size: 0.8rem; margin-right: 5px; }
+.btn-edit { background: #ffc107; }
+.btn-delete { background: #ff4d4d; }
+
+/* Form Style */
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }

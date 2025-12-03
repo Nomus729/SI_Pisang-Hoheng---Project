@@ -405,4 +405,45 @@ if (target.closest('.cart-remove-btn') || target.classList.contains('cart-remove
         });
     }
 
+    // ... (Kode sebelumnya tetap ada) ...
+
+    // =========================================
+    // 11. INISIALISASI SWIPER JS (CAROUSEL)
+    // =========================================
+    // Cek apakah ada elemen swiper di halaman
+    
+
+if (document.querySelector('.product-swiper')) {
+        const swiper = new Swiper('.product-swiper', {
+            // Pengaturan Dasar
+            slidesPerView: 1, // Tampil 1 produk di HP
+            spaceBetween: 30, // Jarak antar produk
+            loop: true,       // INFINITE LOOP (Tanpa Duplikat Data)
+            
+            // Animasi Bergerak Otomatis
+            autoplay: {
+                delay: 2500, // Bergerak setiap 2.5 detik
+                disableOnInteraction: false, // Tetap jalan walau disentuh
+            },
+
+            // Titik-titik di bawah
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+
+            // Responsif (Laptop/Tablet)
+            breakpoints: {
+                640: {
+                    slidesPerView: 2, // Tablet: 2 Produk
+                    spaceBetween: 20,
+                },
+                1024: {
+                    slidesPerView: 3, // Laptop: 3 Produk
+                    spaceBetween: 40,
+                },
+            },
+        });
+    }
+
 });

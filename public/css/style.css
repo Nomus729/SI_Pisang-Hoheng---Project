@@ -482,14 +482,21 @@ h2 {
 
 .product-grid-alt {
     display: grid;
+    /* Grid 3 Kolom yang rata */
     grid-template-columns: repeat(3, 1fr);
     gap: 40px;
     padding-top: 80px;
+    /* Pastikan baris memiliki tinggi yang sama */
+    align-items: stretch; 
 }
 
 .prod-card-fixed {
     position: relative;
     z-index: 1;
+    /* Agar wrapper meregang penuh mengikuti grid */
+    height: 100%; 
+    display: flex;
+    flex-direction: column;
 }
 
 .prod-circle-img {
@@ -519,10 +526,16 @@ h2 {
     padding: 100px 25px 30px 25px;
     color: #000;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    
+    /* Flexbox Column: Kunci agar tinggi seragam */
     display: flex;
     flex-direction: column;
+    /* Kartu akan mengisi tinggi penuh dari wrapper */
+    height: 100%; 
+    justify-content: space-between; /* Dorong harga ke paling bawah */
 }
 
+/* Judul Produk */
 .prod-card-content h3 {
     font-size: 1.3rem;
     font-weight: 800;
@@ -530,24 +543,62 @@ h2 {
     text-align: center;
     margin-bottom: 20px;
     letter-spacing: 0.5px;
+    
+    /* Batasi judul max 2 baris agar rapi (Opsional) */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
+/* Detail List (Deskripsi) */
+/* Detail List (Deskripsi) - REVISI RAPI */
 .prod-details {
-    list-style: none;
-    text-align: left;
+    /* Reset gaya list default */
+    list-style-type: none; /* Hilangkan bullet bawaan browser */
+    margin: 0;
+    padding: 0;
+    
+    text-align: left; /* Rata Kiri */
     margin-bottom: 25px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
     line-height: 1.6;
-    padding-left: 10px;
+    
+    /* Agar isi deskripsi mengisi ruang kosong (Flexible Height) */
+    flex-grow: 1; 
+    
+    /* Word Wrap (Penting untuk kata panjang tanpa spasi) */
+    white-space: pre-wrap; 
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
+/* Jika Anda ingin menggunakan simbol strip (-) manual dari database */
+/* Tidak perlu tambahan CSS khusus, karena white-space: pre-wrap sudah menanganinya */
+
+.prod-details li {
+    position: relative;
+    padding-left: 15px; /* Memberi jarak untuk bullet custom */
+}
+
+.prod-details li::before {
+    content: "•"; /* Simbol Bullet */
+    position: absolute;
+    left: 0;
+    color: #333; /* Warna Bullet */
+    font-weight: bold;
+}
+
+/* Harga */
 .prod-price {
     font-weight: 800;
     font-size: 1.1rem;
     text-align: right;
     display: block;
-    margin-top: auto;
+    margin-top: auto; /* Selalu menempel di dasar kartu */
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.1); /* Garis pemisah tipis */
 }
 
 @media (max-width: 900px) {
@@ -996,4 +1047,201 @@ body.admin-body {
 .tag-green {
     background: #2ecc71; color: white; padding: 2px 8px;
     border-radius: 4px; font-size: 0.9rem;
+}
+
+/* =========================================
+   19. INFINITE PRODUCT SLIDER (MARQUEE)
+   ========================================= */
+.product-slider-container {
+    width: 100%;
+    overflow: hidden; /* Sembunyikan yang di luar layar */
+    white-space: nowrap;
+    padding: 50px 0;
+    position: relative;
+}
+
+.product-slider-track {
+    display: inline-flex;
+    gap: 40px;
+    animation: scroll 30s linear infinite; /* Animasi berjalan 30 detik */
+}
+
+/* Pause animasi saat mouse hover agar user bisa klik */
+.product-slider-track:hover {
+    animation-play-state: paused;
+}
+
+/* Definisi Gerakan Animasi */
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } /* Geser setengah total lebar */
+}
+
+/* Modifikasi Kartu Produk Slider agar sesuai baris */
+.prod-card-slider {
+    width: 300px; /* Lebar tetap */
+    display: inline-block;
+    white-space: normal; /* Text di dalam kartu tetap wrap */
+    flex-shrink: 0;
+    position: relative;
+    /* Style kartu sama seperti sebelumnya */
+    margin-top: 60px; /* Ruang untuk gambar menyembul */
+}
+
+
+/* =========================================
+   20. PAGINATION STYLE
+   ========================================= */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 40px;
+}
+
+.page-link {
+    display: inline-block;
+    padding: 10px 18px;
+    background: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.page-link:hover, .page-link.active {
+    background: #89CFF0;
+    color: #fff;
+    border-color: #89CFF0;
+}
+
+/* =========================================
+   21. ADMIN CONTENT COMPONENTS (TAMBAHAN)
+   ========================================= */
+
+/* --- Card & Table Style --- */
+.card-box { 
+    background: #fff; 
+    padding: 25px; 
+    border-radius: 15px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02); 
+    margin-bottom: 20px; 
+}
+
+.table-custom { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 15px; 
+}
+
+.table-custom th { 
+    text-align: left; 
+    padding: 12px; 
+    background: #f8f9fa; 
+    color: #666; 
+    font-weight: 600; 
+    border-bottom: 2px solid #eee;
+}
+
+.table-custom td { 
+    padding: 12px; 
+    border-bottom: 1px solid #eee; 
+    vertical-align: middle;
+}
+
+/* --- Action Buttons (Edit/Delete) --- */
+.btn-action { 
+    padding: 6px 10px; 
+    border-radius: 5px; 
+    color: #fff; 
+    text-decoration: none; 
+    font-size: 0.85rem; 
+    margin-right: 5px; 
+    display: inline-block;
+    transition: 0.2s;
+}
+
+.btn-edit { background: #ffc107; }
+.btn-edit:hover { background: #e0a800; }
+
+.btn-delete { background: #ff4d4d; }
+.btn-delete:hover { background: #d32f2f; }
+
+/* --- Form Input Style (Admin) --- */
+.form-group { margin-bottom: 20px; }
+
+.form-group label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-weight: 600; 
+    color: #444;
+}
+
+.form-group input, 
+.form-group textarea, 
+.form-group select { 
+    width: 100%; 
+    padding: 12px; 
+    border: 1px solid #ddd; 
+    border-radius: 8px; 
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: #fdfdfd;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #89CFF0;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(137, 207, 240, 0.2);
+}
+
+.row-2 { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px; 
+}
+
+/* Detail Textarea Wrapper */
+.detail-input-wrapper {
+    position: relative;
+}
+
+/* --- Laporan Chart Container --- */
+canvas {
+    max-width: 100%;
+}
+
+/* =========================================
+   19. SWIPER JS CUSTOM STYLE
+   ========================================= */
+
+/* Container Slider */
+.product-swiper {
+    width: 100%;
+    /* PENTING: Padding atas besar agar gambar 'pop-out' tidak terpotong */
+    padding-top: 100px !important; 
+    padding-bottom: 50px !important;
+    padding-left: 20px; /* Sedikit jarak di pinggir */
+    padding-right: 20px;
+}
+
+/* Slide Item */
+.swiper-slide {
+    /* Pastikan tinggi kartu seragam */
+    height: auto;
+    display: flex;
+    justify-content: center;
+}
+
+/* Pastikan kartu di dalam slide mengisi tinggi penuh */
+.swiper-slide .prod-card-fixed {
+    width: 100%;
+    height: 100%;
+}
+
+/* Bullet Pagination di bawah (Opsional) */
+.swiper-pagination-bullet-active {
+    background-color: #89CFF0 !important;
 }
