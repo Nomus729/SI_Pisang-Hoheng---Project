@@ -71,6 +71,13 @@ switch ($action) {
         $admin->dashboard();
         break;
 
+    case 'place_order':
+        if (class_exists('CartController')) {
+            $cart = new CartController();
+            $cart->place_order();
+        }
+        break;
+
     default:
         $controller = new HomeController();
         $controller->index();

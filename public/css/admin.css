@@ -74,3 +74,64 @@ body.admin-body {
 .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
 .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* --- STATUS BADGES --- */
+.status-badge {
+    padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.status-pending { background: #fff3cd; color: #856404; } /* Kuning */
+.status-proses  { background: #cce5ff; color: #004085; } /* Biru */
+.status-selesai { background: #d4edda; color: #155724; } /* Hijau */
+.status-batal   { background: #f8d7da; color: #721c24; } /* Merah */
+
+/* --- TOMBOL AKSI BARU --- */
+.btn-info { background: #17a2b8; }
+.btn-success { background: #28a745; }
+.btn-primary { background: #007bff; }
+.btn-danger { background: #dc3545; }
+
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+/* --- FILTER BUTTONS --- */
+.btn-filter {
+    display: inline-block;
+    padding: 8px 24px;
+    border-radius: 50px; /* Bentuk Pill / Bulat */
+    border: 1px solid #e0e0e0; /* Border abu tipis */
+    background-color: #fff; /* Background putih */
+    
+    /* PENTING: Warna teks abu-abu agar tidak ungu/biru */
+    color: #666; 
+    
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+/* Efek saat Mouse Hover (Disorot) */
+.btn-filter:hover {
+    border-color: #89CFF0;
+    color: #89CFF0; /* Teks jadi biru muda */
+    background-color: #f8fdff; /* Background agak kebiruan dikit */
+}
+
+/* Efek saat Aktif (Sedang Dipilih) */
+.btn-filter.active {
+    background-color: #89CFF0; /* Background Biru Tema */
+    color: #fff; /* Teks Putih */
+    border-color: #89CFF0;
+    box-shadow: 0 4px 10px rgba(137, 207, 240, 0.4); /* Bayangan Biru Halus */
+}
+
+/* --- BADGE SIDEBAR --- */
+.badge-mini {
+    background: #ff4d4d; color: white; font-size: 0.6rem;
+    padding: 2px 6px; border-radius: 10px; margin-left: auto;
+}
+

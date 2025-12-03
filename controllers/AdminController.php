@@ -17,13 +17,31 @@ class AdminController {
     }
 
     public function dashboard() {
-        // 1. TANGKAP REQUEST POST (UNTUK SIMPAN/UPDATE DATA)
+        // --- 1. HANDLER AJAX (BARU: UNTUK PESANAN & NOTIFIKASI) ---
+        if (isset($_GET['action_ajax'])) {
+            if ($_GET['action_ajax'] == 'update_status') {
+                $this->updateStatusPesanan();
+                return;
+            }
+            if ($_GET['action_ajax'] == 'get_detail') {
+                $this->getDetailPesanan();
+                return;
+            }
+            
+            // --- TAMBAHAN BARU: CEK NOTIFIKASI ---
+            if ($_GET['action_ajax'] == 'check_notif') {
+                $this->checkNewOrders();
+                return;
+            }
+        }
+
+        // --- 2. HANDLER POST (SIMPAN PRODUK) ---
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->simpanProduk();
             return;
         }
 
-        // 2. TANGKAP REQUEST PAGE (NAVIGASI)
+        // --- 3. HANDLER VIEW (NAVIGASI) ---
         $view = isset($_GET['page']) ? $_GET['page'] : 'daftar_produk';
         $data = [];
 
@@ -33,20 +51,24 @@ class AdminController {
                 break;
             
             case 'detail_produk':
-                // Cek apakah mode EDIT (ada ID) atau TAMBAH BARU
                 $id = isset($_GET['id']) ? $_GET['id'] : null;
                 $data = $id ? $this->getProdukById($id) : null;
                 break;
             
             case 'hapus_produk':
-                // Logic Hapus
                 $id = isset($_GET['id']) ? $_GET['id'] : null;
                 if ($id) {
                     $this->hapusProduk($id);
                 } else {
                     header("Location: index.php?action=dashboard&page=daftar_produk");
                 }
-                return; // Stop disini agar tidak load view
+                return;
+
+            case 'pesanan':
+                // Tangkap filter status dari URL (default: all)
+                $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+                $data = $this->getAllPesanan($statusFilter); // Kirim status ke fungsi
+                break;
 
             case 'laporan_keuangan':
                 $data = $this->getLaporanKeuangan();
@@ -60,23 +82,112 @@ class AdminController {
         require 'views/admin/dashboard.php';
     }
 
-    // --- FUNGSI SIMPAN (CREATE / UPDATE) ---
+    // --- FUNGSI PESANAN (BARU) ---
+    // --- FUNGSI PESANAN (DENGAN FILTER) ---
+    // --- FUNGSI PESANAN (DENGAN FILTER) ---
+    private function getAllPesanan($status = 'all') {
+        $sql = "SELECT p.*, u.nama_user 
+                FROM pesanan p 
+                JOIN users u ON p.user_id = u.id";
+        
+        // Jika status bukan 'all', tambahkan kondisi WHERE
+        if ($status != 'all') {
+            $sql .= " WHERE p.status = :status";
+        }
+        
+        $sql .= " ORDER BY p.tanggal DESC"; // Selalu urutkan dari yang terbaru
+
+        $stmt = $this->db->prepare($sql);
+
+        // Bind parameter status jika ada filter
+        if ($status != 'all') {
+            $stmt->bindParam(':status', $status);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function getDetailPesanan() {
+        $id = $_GET['id'];
+        
+        $sqlOrder = "SELECT p.*, u.nama_user, u.email 
+                     FROM pesanan p 
+                     JOIN users u ON p.user_id = u.id 
+                     WHERE p.id = :id";
+        $stmt = $this->db->prepare($sqlOrder);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $sqlItems = "SELECT * FROM detail_pesanan WHERE pesanan_id = :id";
+        $stmt2 = $this->db->prepare($sqlItems);
+        $stmt2->bindParam(':id', $id);
+        $stmt2->execute();
+        $items = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+
+        header('Content-Type: application/json');
+        echo json_encode(['order' => $order, 'items' => $items]);
+        exit;
+    }
+
+    private function updateStatusPesanan() {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $id = $input['id'];
+        $status = $input['status'];
+
+        $sql = "UPDATE pesanan SET status = :status WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':status', $status);
+        $stmt->bindParam(':id', $id);
+
+        header('Content-Type: application/json');
+        if ($stmt->execute()) {
+            echo json_encode(['status' => 'success']);
+        } else {
+            echo json_encode(['status' => 'error']);
+        }
+        exit;
+    }
+
+    // --- FUNGSI CEK PESANAN BARU (REALTIME) ---
+    private function checkNewOrders() {
+        // Ambil pesanan yang statusnya masih 'pending'
+        $sql = "SELECT p.id, p.total_harga, u.nama_user 
+                FROM pesanan p
+                JOIN users u ON p.user_id = u.id
+                WHERE p.status = 'pending' 
+                ORDER BY p.tanggal DESC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Hitung jumlahnya
+        $count = count($orders);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'count' => $count,
+            'orders' => $orders
+        ]);
+        exit;
+    }
+
+    // --- FUNGSI PRODUK (LAMA) ---
     private function simpanProduk() {
-        // Ambil data dari form
-        $id = isset($_POST['id']) ? $_POST['id'] : null; // Cek apakah ada ID (untuk edit)
+        $id = isset($_POST['id']) ? $_POST['id'] : null;
         $kode = $_POST['kode'];
         $nama = $_POST['nama'];
-        $harga = $_POST['harga']; // Ini ambil dari input hidden 'hargaReal'
+        $harga = $_POST['harga'];
         $stok = $_POST['stok'];
         $detail = $_POST['detail'];
         
-        // Validasi Sederhana
         if (empty($nama) || empty($harga) || empty($stok)) {
             echo "<script>alert('Data tidak boleh kosong!'); history.back();</script>";
             return;
         }
 
-        // Upload Gambar
         $gambarQuery = ""; 
         $params = [
             ':kode' => $kode,
@@ -86,30 +197,24 @@ class AdminController {
             ':detail' => $detail
         ];
 
-        // Cek apakah user upload gambar baru?
         if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == 0) {
             $targetDir = "uploads/";
             if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
-            
             $fileName = time() . "_" . basename($_FILES["gambar"]["name"]);
             $targetFilePath = $targetDir . $fileName;
-            
             if (move_uploaded_file($_FILES["gambar"]["tmp_name"], $targetFilePath)) {
                 $gambarQuery = ", gambar = :gambar";
                 $params[':gambar'] = $fileName;
             }
         } elseif (!$id) {
-            // Jika tambah baru tapi tidak upload gambar, pakai default
             $gambarQuery = ", gambar = :gambar";
             $params[':gambar'] = 'default.png';
         }
 
         if ($id) {
-            // --- MODE UPDATE ---
             $sql = "UPDATE produk SET kode_barang=:kode, nama_produk=:nama, harga=:harga, stok=:stok, deskripsi=:detail $gambarQuery WHERE id=:id";
             $params[':id'] = $id;
         } else {
-            // --- MODE INSERT ---
             $sql = "INSERT INTO produk (kode_barang, nama_produk, harga, stok, deskripsi, gambar, kategori) 
                     VALUES (:kode, :nama, :harga, :stok, :detail, " . (isset($params[':gambar']) ? ":gambar" : "'default.png'") . ", 'Makanan')";
         }
@@ -129,42 +234,32 @@ class AdminController {
         }
     }
 
-    // --- FUNGSI HAPUS ---
-    // --- FUNGSI HAPUS (LENGKAP DENGAN GAMBAR) ---
     private function hapusProduk($id) {
-        // 1. Ambil nama gambar dulu sebelum dihapus
         $stmtCheck = $this->db->prepare("SELECT gambar FROM produk WHERE id = :id");
         $stmtCheck->bindParam(':id', $id);
         $stmtCheck->execute();
         $produk = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-        // 2. Hapus Data dari Database
         $stmt = $this->db->prepare("DELETE FROM produk WHERE id = :id");
         $stmt->bindParam(':id', $id);
         
         if ($stmt->execute()) {
-            // 3. Hapus File Gambar jika ada dan bukan default
             if ($produk && $produk['gambar'] !== 'default.png') {
                 $filePath = "uploads/" . $produk['gambar'];
-                if (file_exists($filePath)) {
-                    unlink($filePath); // Hapus file fisik
-                }
+                if (file_exists($filePath)) unlink($filePath);
             }
-
             $_SESSION['flash_icon'] = 'success';
             $_SESSION['flash_title'] = 'Terhapus!';
             $_SESSION['flash_text'] = 'Produk berhasil dihapus.';
         } else {
             $_SESSION['flash_icon'] = 'error';
             $_SESSION['flash_title'] = 'Gagal!';
-            $_SESSION['flash_text'] = 'Gagal menghapus produk dari database.';
+            $_SESSION['flash_text'] = 'Gagal menghapus produk.';
         }
-        
         header("Location: index.php?action=dashboard&page=daftar_produk");
         exit;
     }
 
-    // --- FUNGSI READ (HELPER) ---
     private function getProduk() {
         $stmt = $this->db->query("SELECT * FROM produk ORDER BY created_at DESC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -177,7 +272,6 @@ class AdminController {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // --- FUNGSI LAPORAN (DUMMY DATA) ---
     private function getLaporanKeuangan() {
         return [
             'pendapatan' => [1500000, 2300000, 1800000, 3200000],
@@ -187,7 +281,6 @@ class AdminController {
     }
 
     private function getLaporanProduk() {
-        // Ambil data real jika ada, atau kosongkan
         try {
             $stmt = $this->db->query("SELECT nama_produk, terjual FROM produk ORDER BY terjual DESC LIMIT 5");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);

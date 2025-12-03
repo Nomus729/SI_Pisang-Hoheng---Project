@@ -123,6 +123,7 @@
 
     <script src="public/js/script.js"></script>
     <script>
+        // ... (fungsi toggleAddress dan toggleQris biarkan sama) ...
         function toggleAddress(show) {
             const box = document.getElementById('addressBox');
             const totalElem = document.getElementById('grandTotal');
@@ -143,20 +144,62 @@
             else box.classList.add('hidden');
         }
 
+        // --- REVISI FUNGSI PEMBAYARAN ---
         function processPayment() {
+            // 1. Ambil Data dari Form
+            const deliveryType = document.querySelector('input[name="delivery"]:checked').value;
+            const paymentType = document.querySelector('input[name="payment"]:checked').value;
+            const addressVal = document.querySelector('#addressBox textarea').value;
+
+            // 2. Validasi Sederhana
+            if (deliveryType === 'delivery' && addressVal.trim() === "") {
+                Swal.fire('Gagal', 'Alamat harus diisi untuk pengiriman!', 'warning');
+                return;
+            }
+
+            // 3. Konfirmasi
             Swal.fire({
-                title: 'Memproses Pembayaran...',
-                timer: 2000,
-                didOpen: () => { Swal.showLoading() }
-            }).then(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Pesanan Berhasil!',
-                    text: 'Mohon tunggu konfirmasi selanjutnya.',
-                    confirmButtonColor: '#89CFF0'
-                }).then(() => {
-                    window.location.href = 'index.php';
-                });
+                title: 'Konfirmasi Pembayaran',
+                text: "Pastikan pesanan sudah benar.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#89CFF0',
+                confirmButtonText: 'Ya, Bayar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    
+                    Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
+
+                    // 4. Kirim ke Server
+                    fetch('index.php?action=place_order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            delivery: deliveryType,
+                            payment: paymentType,
+                            address: addressVal
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Pesanan Berhasil!',
+                                text: 'Terima kasih telah berbelanja.',
+                                confirmButtonColor: '#89CFF0'
+                            }).then(() => {
+                                window.location.href = 'index.php'; // Kembali ke Home
+                            });
+                        } else {
+                            Swal.fire('Gagal', data.message, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                    });
+                }
             });
         }
     </script>

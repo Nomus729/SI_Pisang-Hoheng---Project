@@ -29,6 +29,10 @@
                     <a href="index.php?action=dashboard&page=detail_produk" class="menu-item <?= ($view=='detail_produk')?'active':'' ?>">
                         <i class="fas fa-plus-circle"></i> Tambah / Detail
                     </a>
+                    <a href="index.php?action=dashboard&page=pesanan" class="menu-item <?= ($view=='pesanan')?'active':'' ?>">
+                        <i class="fas fa-shopping-bag"></i> Pesanan Masuk
+                            
+                    </a>
                 </div>
 
                 <div class="menu-group">
@@ -101,7 +105,56 @@
         ?>
     <?php endif; ?>
 
+    <div class="modal-overlay" id="detailModalAdmin" style="display: none;">
+    <div class="modal-container" style="width: 600px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin:0; color:#333;">📄 Detail Pesanan <span id="modalKode"></span></h3>
+            <button class="close-modal-admin" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        
+        <div class="detail-content">
+            <div class="row-2">
+                <div>
+                    <p><strong>Pemesan:</strong> <span id="modalNama"></span></p>
+                    <p><strong>Tanggal:</strong> <span id="modalTanggal"></span></p>
+                </div>
+                <div>
+                    <p><strong>Metode:</strong> <span id="modalMetode"></span></p>
+                    <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                </div>
+            </div>
+            
+            <div id="modalAlamatBox" style="background: #f9f9f9; padding: 10px; margin: 10px 0; border-radius: 8px;">
+                <strong>Alamat Pengiriman:</strong><br>
+                <span id="modalAlamat">-</span>
+            </div>
+
+            <table class="table-custom" style="font-size: 0.9rem;">
+                <thead>
+                    <tr>
+                        <th>Produk</th>
+                        <th>Qty</th>
+                        <th class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="modalItems">
+                    </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" style="text-align:right; font-weight:bold;">Total Bayar:</td>
+                        <td style="text-align:right; font-weight:bold; font-size:1.1rem; color:#89CFF0;" id="modalTotal"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div style="text-align: right; margin-top: 20px;">
+            <button class="btn-signin close-modal-admin" style="background:#ddd; color:#333;">Tutup</button>
+        </div>
+    </div>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="public/js/admin.js"></script>
 </body>
+
 </html>

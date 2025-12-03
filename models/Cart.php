@@ -62,5 +62,59 @@ public function removeItem($cartId) {
     $stmt->bindParam(":id", $cartId);
     return $stmt->execute();
 }
+public function createOrder($userId, $data, $total) {
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Buat ID Pesanan Unik (Contoh: INV-20231025-1234)
+            $kodePesanan = 'INV-' . date('Ymd') . '-' . rand(1000, 9999);
+
+            // 2. Simpan ke Tabel PESANAN
+            $queryOrder = "INSERT INTO pesanan (kode_pesanan, user_id, total_harga, metode_bayar, metode_kirim, alamat_kirim, status) 
+                           VALUES (:kode, :uid, :total, :bayar, :kirim, :alamat, 'pending')";
+            $stmt = $this->conn->prepare($queryOrder);
+            $stmt->bindParam(':kode', $kodePesanan);
+            $stmt->bindParam(':uid', $userId);
+            $stmt->bindParam(':total', $total);
+            $stmt->bindParam(':bayar', $data['payment']);
+            $stmt->bindParam(':kirim', $data['delivery']);
+            $stmt->bindParam(':alamat', $data['address']);
+            $stmt->execute();
+            
+            $pesananId = $this->conn->lastInsertId();
+
+            // 3. Ambil item dari Keranjang
+            $cartItems = $this->getCartItems($userId);
+
+            // 4. Masukkan ke DETAIL_PESANAN
+            $queryDetail = "INSERT INTO detail_pesanan (pesanan_id, product_name, harga, qty, subtotal) 
+                            VALUES (:pid, :name, :price, :qty, :sub)";
+            $stmtDetail = $this->conn->prepare($queryDetail);
+
+            foreach ($cartItems as $item) {
+                $subtotalItem = $item['price'] * $item['qty'];
+                $stmtDetail->bindParam(':pid', $pesananId);
+                $stmtDetail->bindParam(':name', $item['product_name']);
+                $stmtDetail->bindParam(':price', $item['price']);
+                $stmtDetail->bindParam(':qty', $item['qty']);
+                $stmtDetail->bindParam(':sub', $subtotalItem);
+                $stmtDetail->execute();
+            }
+
+            // 5. Kosongkan Keranjang User
+            $queryClear = "DELETE FROM keranjang WHERE user_id = :uid";
+            $stmtClear = $this->conn->prepare($queryClear);
+            $stmtClear->bindParam(':uid', $userId);
+            $stmtClear->execute();
+
+            $this->conn->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            return false;
+        }
+    }
+
 }
 ?>

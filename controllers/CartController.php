@@ -149,5 +149,49 @@ class CartController {
         ];
         require 'views/checkout.php';
     }
+
+    // ... kode sebelumnya ...
+
+    // FUNGSI PROSES BAYAR
+    public function place_order() {
+        if (ob_get_length()) ob_clean(); // Bersihkan output
+        header('Content-Type: application/json');
+        session_start();
+
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['status' => 'error', 'message' => 'Sesi habis']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        // Validasi Input
+        if ($input['delivery'] == 'delivery' && empty($input['address'])) {
+            echo json_encode(['status' => 'error', 'message' => 'Alamat wajib diisi untuk delivery!']);
+            exit;
+        }
+
+        $database = new Database();
+        $db = $database->getConnection();
+        $cartModel = new Cart($db);
+        $userId = $_SESSION['user_id'];
+
+        // Hitung ulang total di server (jangan percaya data frontend)
+        $items = $cartModel->getCartItems($userId);
+        $subtotal = 0;
+        foreach ($items as $item) {
+            $subtotal += $item['price'] * $item['qty'];
+        }
+        
+        // Tambah ongkir jika delivery
+        $grandTotal = ($input['delivery'] == 'delivery') ? $subtotal + 10000 : $subtotal;
+
+        if ($cartModel->createOrder($userId, $input, $grandTotal)) {
+            echo json_encode(['status' => 'success']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal membuat pesanan']);
+        }
+        exit;
+    }
 }
 ?>

@@ -27,7 +27,8 @@ class HomeController {
 
 
         // --- 2. AMBIL SEMUA PRODUK UNTUK SLIDER BAWAH ---
-        $queryProduk = "SELECT * FROM produk ORDER BY RAND()"; // Ambil semua secara acak
+        $queryProduk = "SELECT * FROM produk ORDER BY created_at DESC"; 
+        
         $stmtProduk = $db->prepare($queryProduk);
         $stmtProduk->execute();
         $all_products = $stmtProduk->fetchAll(PDO::FETCH_ASSOC);
