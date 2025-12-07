@@ -204,31 +204,47 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
-    // 8. ADD TO CART (DARI MENU UTAMA)
+    // 8. ADD TO CART (DARI MENU UTAMA) - REVISI
     // =========================================
     const menuGrid = document.querySelector('.menu-grid');
     
-    // Klik Tombol + / - di Menu Utama (Hanya Visual)
     if (menuGrid) {
         menuGrid.addEventListener('click', function(e) {
+            
+            // A. Handle Tombol Plus (+)
             if (e.target.classList.contains('btn-plus')) {
+                e.stopPropagation(); // Mencegah klik tembus
                 const qtySpan = e.target.previousElementSibling;
                 let val = parseInt(qtySpan.innerText);
                 qtySpan.innerText = val + 1;
+                return; // Stop disini
             }
+            
+            // B. Handle Tombol Minus (-)
             if (e.target.classList.contains('btn-minus')) {
+                e.stopPropagation();
                 const qtySpan = e.target.nextElementSibling;
                 let val = parseInt(qtySpan.innerText);
-                if (val > 1) qtySpan.innerText = val - 1;
+                if (val > 1) {
+                    qtySpan.innerText = val - 1;
+                }
+                return; // Stop disini
             }
-
-            // Klik Tombol Keranjang (Kirim ke Database)
+            if (e.target.classList.contains('btn-plus')) { /*...*/ }
+            if (e.target.classList.contains('btn-minus')) { /*...*/ }
+            // C. Klik Tombol Keranjang (Kirim ke Database)
             const cartBtn = e.target.closest('.add-to-cart-btn');
             if (cartBtn) {
+                e.preventDefault();
+                
                 const name = cartBtn.getAttribute('data-name');
                 const price = cartBtn.getAttribute('data-price');
                 const image = cartBtn.getAttribute('data-image');
-                const qtyVal = cartBtn.parentElement.querySelector('.qty-val').innerText;
+                
+                // Ambil angka Qty dari elemen saudaranya
+                const cardActions = cartBtn.parentElement;
+                const qtySpan = cardActions.querySelector('.qty-val');
+                const qtyVal = parseInt(qtySpan.innerText); // Pastikan Integer
 
                 fetch('index.php?action=add_to_cart', {
                     method: 'POST',
@@ -238,10 +254,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
+                        const badge = document.getElementById('cartBadge');
+                        if (badge) {
+                            // Ambil angka sekarang, tambah dengan qty baru
+                            let currentCount = parseInt(badge.innerText) || 0;
+                            let newCount = currentCount + parseInt(qtyVal);
+                            
+                            badge.innerText = newCount;
+                            badge.classList.remove('hidden'); // Munculkan jika tadinya sembunyi
+                        }
+                        // Reset Qty jadi 1 setelah berhasil
+                    //qtySpan.innerText = "1";
+                        
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil!',
-                            text: 'Masuk keranjang.',
+                            text: 'Berhasil masuk keranjang.',
                             showConfirmButton: false,
                             timer: 1500
                         });
@@ -252,7 +280,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             text: data.message,
                             confirmButtonColor: '#89CFF0'
                         }).then(() => {
-                            if(data.message.includes('login') && modal) modal.style.display = "flex";
+                            if(data.message.includes('login') && modal) {
+                                modal.style.display = "flex";
+                            }
                         });
                     }
                 });

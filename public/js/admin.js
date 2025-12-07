@@ -146,6 +146,9 @@ function viewDetail(orderId) {
                 alamatBox.style.display = 'none';
             }
 
+            const catatanText = order.catatan ? order.catatan : "Tidak ada catatan";
+            document.getElementById('modalCatatan').innerText = catatanText;
+
             // Loop Barang Belanjaan
             let htmlItems = '';
             items.forEach(item => {

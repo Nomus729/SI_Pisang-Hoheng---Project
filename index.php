@@ -78,6 +78,13 @@ switch ($action) {
         }
         break;
 
+    case 'my_orders':
+        if (class_exists('CartController')) {
+            $cart = new CartController();
+            $cart->my_orders();
+        }
+        break;
+        
     default:
         $controller = new HomeController();
         $controller->index();

@@ -42,7 +42,6 @@ class CartController {
     }
 
     public function addToCart() {
-        // Bersihkan output sebelumnya agar tidak merusak JSON
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
 
@@ -76,9 +75,7 @@ class CartController {
         exit;
     }
 
-    // --- FUNGSI UPDATE JUMLAH ---
     public function update_cart() {
-        // Bersihkan output sebelumnya
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
 
@@ -100,9 +97,7 @@ class CartController {
         exit;
     }
 
-    // --- FUNGSI HAPUS ITEM (REVISI PENTING) ---
     public function remove_item() {
-        // PENTING: Bersihkan buffer agar tidak ada spasi/error PHP yang ikut terkirim
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
 
@@ -150,24 +145,22 @@ class CartController {
         require 'views/checkout.php';
     }
 
-    // ... kode sebelumnya ...
-
-    // FUNGSI PROSES BAYAR
+    // FUNGSI PROSES BAYAR (REVISI: HAPUS SESSION_START)
     public function place_order() {
-        if (ob_get_length()) ob_clean(); // Bersihkan output
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
-        session_start();
-
+        
+        // Cek Session (Tanpa session_start lagi jika sudah di index)
         if (!isset($_SESSION['user_id'])) {
-            echo json_encode(['status' => 'error', 'message' => 'Sesi habis']);
+            echo json_encode(['status' => 'error', 'message' => 'Sesi habis, silakan login ulang']);
             exit;
         }
 
         $input = json_decode(file_get_contents('php://input'), true);
         
-        // Validasi Input
-        if ($input['delivery'] == 'delivery' && empty($input['address'])) {
-            echo json_encode(['status' => 'error', 'message' => 'Alamat wajib diisi untuk delivery!']);
+        // Validasi Alamat jika Delivery
+        if ($input['delivery'] == 'delivery' && empty(trim($input['address']))) {
+            echo json_encode(['status' => 'error', 'message' => 'Alamat pengiriman wajib diisi!']);
             exit;
         }
 
@@ -176,22 +169,66 @@ class CartController {
         $cartModel = new Cart($db);
         $userId = $_SESSION['user_id'];
 
-        // Hitung ulang total di server (jangan percaya data frontend)
+        // Hitung Total di Server
         $items = $cartModel->getCartItems($userId);
+        if (empty($items)) {
+            echo json_encode(['status' => 'error', 'message' => 'Keranjang kosong!']);
+            exit;
+        }
+
         $subtotal = 0;
         foreach ($items as $item) {
             $subtotal += $item['price'] * $item['qty'];
         }
         
-        // Tambah ongkir jika delivery
         $grandTotal = ($input['delivery'] == 'delivery') ? $subtotal + 10000 : $subtotal;
 
+        // Panggil Model
         if ($cartModel->createOrder($userId, $input, $grandTotal)) {
             echo json_encode(['status' => 'success']);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Gagal membuat pesanan']);
+            echo json_encode(['status' => 'error', 'message' => 'Gagal menyimpan ke database']);
         }
         exit;
+    }
+
+    // ... di dalam CartController ...
+
+    // FUNGSI PESANAN SAYA
+    public function my_orders() {
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: index.php");
+            exit;
+        }
+
+        $userId = $_SESSION['user_id'];
+        $database = new Database();
+        $db = $database->getConnection();
+
+        // Ambil Pesanan User
+        $sql = "SELECT * FROM pesanan WHERE user_id = :uid ORDER BY tanggal DESC";
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':uid', $userId);
+        $stmt->execute();
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Ambil Detail Item untuk setiap pesanan (Opsional, atau ambil via AJAX nanti)
+        foreach ($orders as &$order) {
+            $sqlItem = "SELECT product_name, qty FROM detail_pesanan WHERE pesanan_id = :pid";
+            $stmtItem = $db->prepare($sqlItem);
+            $stmtItem->bindParam(':pid', $order['id']);
+            $stmtItem->execute();
+            $order['items'] = $stmtItem->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $data = [
+            'title' => 'Pesanan Saya - Si Pisang',
+            'orders' => $orders
+        ];
+
+        require 'views/my_orders.php';
     }
 }
 ?>

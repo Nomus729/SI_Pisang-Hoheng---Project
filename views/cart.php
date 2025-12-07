@@ -69,7 +69,9 @@
             <div class="cart-sidebar">
                 <div class="note-box">
                     <label>Catatan Pesanan</label>
-                    <textarea placeholder="Contoh: Jangan terlalu gosong..."></textarea>
+                    <textarea id="cartNote" 
+                              placeholder="Contoh: Jangan terlalu gosong..." 
+                              oninput="localStorage.setItem('userOrderNote', this.value)"></textarea>
                 </div>
                 
                 <div class="cart-summary">
@@ -94,5 +96,16 @@
         </div>
     </main>
     <?php include 'views/components/footer_scripts.php'; ?>
+
+    <script>
+    // Isi otomatis catatan dari memori jika ada
+    document.addEventListener("DOMContentLoaded", function() {
+        const savedNote = localStorage.getItem('userOrderNote');
+        const noteInput = document.getElementById('cartNote');
+        if(savedNote && noteInput) {
+            noteInput.value = savedNote;
+        }
+    });
+</script>
 </body>
 </html>

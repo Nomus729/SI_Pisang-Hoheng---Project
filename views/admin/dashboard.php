@@ -129,6 +129,11 @@
                 <span id="modalAlamat">-</span>
             </div>
 
+            <div style="background: #fff3cd; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ffeeba;">
+                <strong>📝 Catatan Pemesan:</strong><br>
+                <span id="modalCatatan" style="font-style: italic; color: #555;">-</span>
+            </div>
+            
             <table class="table-custom" style="font-size: 0.9rem;">
                 <thead>
                     <tr>
