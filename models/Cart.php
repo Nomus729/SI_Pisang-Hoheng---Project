@@ -62,15 +62,15 @@ public function removeItem($cartId) {
     $stmt->bindParam(":id", $cartId);
     return $stmt->execute();
 }
-public function createOrder($userId, $data, $total) {
+// --- FUNGSI CHECKOUT (REVISI: KURANGI STOK) ---
+    public function createOrder($userId, $data, $total) {
         try {
             $this->conn->beginTransaction();
 
-            // 1. Buat Kode Pesanan Unik
+            // 1. Buat ID Pesanan
             $kodePesanan = 'INV-' . date('Ymd') . '-' . rand(1000, 9999);
 
-            // 2. Insert ke PESANAN (Pastikan kolom sesuai dengan DB Anda)
-            // Default status 'pending', tanggal otomatis CURRENT_TIMESTAMP
+            // 2. Insert Header Pesanan
             $queryOrder = "INSERT INTO pesanan (kode_pesanan, user_id, total_harga, metode_bayar, metode_kirim, alamat_kirim, catatan, status) 
                            VALUES (:kode, :uid, :total, :bayar, :kirim, :alamat, :catatan, 'pending')";
             
@@ -81,39 +81,53 @@ public function createOrder($userId, $data, $total) {
             $stmt->bindParam(':bayar', $data['payment']);
             $stmt->bindParam(':kirim', $data['delivery']);
             $stmt->bindParam(':alamat', $data['address']);
-            
-            // Handle Catatan Kosong
             $catatan = !empty($data['note']) ? $data['note'] : '-';
             $stmt->bindParam(':catatan', $catatan);
             
-            if (!$stmt->execute()) {
-                throw new Exception("Gagal insert pesanan");
-            }
+            if (!$stmt->execute()) throw new Exception("Gagal membuat pesanan");
             
             $pesananId = $this->conn->lastInsertId();
 
             // 3. Ambil Item Keranjang
             $cartItems = $this->getCartItems($userId);
-            if (empty($cartItems)) {
-                throw new Exception("Keranjang kosong");
-            }
+            if (empty($cartItems)) throw new Exception("Keranjang kosong");
 
-            // 4. Insert ke DETAIL_PESANAN
+            // 4. Proses Setiap Item (Insert Detail & Kurangi Stok)
             $queryDetail = "INSERT INTO detail_pesanan (pesanan_id, product_name, harga, qty, subtotal) 
                             VALUES (:pid, :name, :price, :qty, :sub)";
             $stmtDetail = $this->conn->prepare($queryDetail);
 
+            // Query Cek Stok
+            $queryCekStok = "SELECT stok FROM produk WHERE nama_produk = :name";
+            $stmtCekStok = $this->conn->prepare($queryCekStok);
+
+            // Query Kurangi Stok
+            $queryKurangiStok = "UPDATE produk SET stok = stok - :qty WHERE nama_produk = :name";
+            $stmtKurangiStok = $this->conn->prepare($queryKurangiStok);
+
             foreach ($cartItems as $item) {
+                // A. Cek Stok Dulu
+                $stmtCekStok->bindParam(':name', $item['product_name']);
+                $stmtCekStok->execute();
+                $prod = $stmtCekStok->fetch(PDO::FETCH_ASSOC);
+
+                if ($prod && $prod['stok'] < $item['qty']) {
+                    throw new Exception("Stok '" . $item['product_name'] . "' tidak cukup! Sisa: " . $prod['stok']);
+                }
+
+                // B. Insert Detail
                 $subtotalItem = $item['price'] * $item['qty'];
                 $stmtDetail->bindParam(':pid', $pesananId);
                 $stmtDetail->bindParam(':name', $item['product_name']);
                 $stmtDetail->bindParam(':price', $item['price']);
                 $stmtDetail->bindParam(':qty', $item['qty']);
                 $stmtDetail->bindParam(':sub', $subtotalItem);
-                
-                if (!$stmtDetail->execute()) {
-                    throw new Exception("Gagal insert detail");
-                }
+                if (!$stmtDetail->execute()) throw new Exception("Gagal menyimpan detail");
+
+                // C. Kurangi Stok
+                $stmtKurangiStok->bindParam(':qty', $item['qty']);
+                $stmtKurangiStok->bindParam(':name', $item['product_name']);
+                $stmtKurangiStok->execute();
             }
 
             // 5. Hapus Keranjang
@@ -127,7 +141,10 @@ public function createOrder($userId, $data, $total) {
 
         } catch (Exception $e) {
             $this->conn->rollBack();
-            // Log error jika perlu: error_log($e->getMessage());
+            // Simpan pesan error ke session/log jika perlu, atau throw agar controller tau
+            // Agar sederhana, kita return false, tapi idealnya return pesan error.
+            // Kita akali dengan session flash error di controller nanti.
+            error_log($e->getMessage()); // Cek log php error
             return false;
         }
     }
