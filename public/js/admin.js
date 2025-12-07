@@ -174,56 +174,75 @@ function viewDetail(orderId) {
 }
 
 // B. Update Status Pesanan (Terima / Tolak / Selesai)
+// B. Update Status Pesanan (Revisi: Input Alasan Tolak)
 function updateStatus(orderId, newStatus) {
-    let confirmText = "";
-    let btnColor = "";
-    let btnText = "";
-
-    // Tentukan pesan konfirmasi berdasarkan status baru
-    if (newStatus === 'proses') {
-        confirmText = "Pesanan akan diproses?";
-        btnColor = "#28a745"; // Hijau
-        btnText = "Ya, Proses";
-    } else if (newStatus === 'selesai') {
-        confirmText = "Pesanan sudah selesai dan diterima?";
-        btnColor = "#007bff"; // Biru
-        btnText = "Ya, Selesai";
-    } else if (newStatus === 'batal') {
-        confirmText = "Yakin ingin menolak pesanan ini?";
-        btnColor = "#d33"; // Merah
-        btnText = "Ya, Tolak";
-    }
-
-    Swal.fire({
-        title: 'Update Status?',
-        text: confirmText,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: btnColor,
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: btnText
-    }).then((result) => {
-        if (result.isConfirmed) {
-            
-            // Kirim Request ke Server
-            fetch('index.php?action=dashboard&action_ajax=update_status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: orderId, status: newStatus })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    Swal.fire('Berhasil!', 'Status pesanan diperbarui.', 'success')
-                    .then(() => location.reload()); // Reload halaman agar tabel update
-                } else {
-                    Swal.fire('Gagal', 'Gagal update status.', 'error');
+    
+    // 1. JIKA STATUS TOLAK (BATAL) -> MUNCULKAN INPUT
+    if (newStatus === 'batal') {
+        Swal.fire({
+            title: 'Tolak Pesanan?',
+            input: 'textarea',
+            inputLabel: 'Berikan alasan penolakan untuk pembeli:',
+            inputPlaceholder: 'Contoh: Stok habis, Alamat diluar jangkauan...',
+            inputAttributes: {
+                'aria-label': 'Tulis alasan penolakan'
+            },
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Tolak Pesanan',
+            cancelButtonText: 'Batal',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Anda harus menuliskan alasan penolakan!'
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
-            });
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Kirim dengan Alasan
+                kirimStatusKeServer(orderId, newStatus, result.value);
+            }
+        });
+    } 
+    
+    // 2. JIKA STATUS LAIN (PROSES/SELESAI) -> KONFIRMASI BIASA
+    else {
+        let confirmText = "Lanjutkan proses?";
+        let btnColor = "#007bff";
+        
+        if (newStatus === 'proses') { confirmText = "Proses pesanan ini?"; btnColor = "#28a745"; }
+        else if (newStatus === 'selesai') { confirmText = "Selesaikan pesanan?"; }
+
+        Swal.fire({
+            title: 'Konfirmasi',
+            text: confirmText,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: btnColor,
+            confirmButtonText: 'Ya'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                kirimStatusKeServer(orderId, newStatus, null);
+            }
+        });
+    }
+}
+
+// Fungsi Helper untuk Fetch
+function kirimStatusKeServer(id, status, reason) {
+    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+
+    fetch('index.php?action=dashboard&action_ajax=update_status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, status: status, reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire('Berhasil', '', 'success').then(() => location.reload());
+        } else {
+            Swal.fire('Gagal', 'Terjadi kesalahan server.', 'error');
         }
     });
 }

@@ -8,7 +8,7 @@ class HomeController {
         $db = $database->getConnection();
 
         // --- 1. LOGIKA PAGINATION UNTUK MENU ---
-        $limit = 8; // Jumlah item per halaman
+        $limit = 9; // Jumlah item per halaman
         $page = isset($_GET['halaman']) ? (int)$_GET['halaman'] : 1;
         $start = ($page > 1) ? ($page * $limit) - $limit : 0;
 

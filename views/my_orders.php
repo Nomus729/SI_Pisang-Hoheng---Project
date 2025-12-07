@@ -23,12 +23,31 @@
         </div>
 
         <div class="orders-container">
+            
+            <?php $s = $data['current_status']; ?>
+            <div class="user-filter-bar">
+                <a href="index.php?action=my_orders&status=all" 
+                   class="user-filter-btn <?= $s == 'all' ? 'active' : '' ?>">Semua</a>
+                   
+                <a href="index.php?action=my_orders&status=pending" 
+                   class="user-filter-btn <?= $s == 'pending' ? 'active' : '' ?>">Menunggu</a>
+                   
+                <a href="index.php?action=my_orders&status=proses" 
+                   class="user-filter-btn <?= $s == 'proses' ? 'active' : '' ?>">Diproses</a>
+                   
+                <a href="index.php?action=my_orders&status=selesai" 
+                   class="user-filter-btn <?= $s == 'selesai' ? 'active' : '' ?>">Selesai</a>
+                   
+                <a href="index.php?action=my_orders&status=batal" 
+                   class="user-filter-btn <?= $s == 'batal' ? 'active' : '' ?>">Dibatalkan</a>
+            </div>
+
             <?php if(empty($data['orders'])): ?>
                 <div class="empty-state">
                     <i class="fas fa-box-open"></i>
-                    <h3>Belum ada pesanan</h3>
-                    <p>Yuk pesan makanan favoritmu sekarang!</p>
-                    <a href="index.php" class="btn-checkout">Pesan Sekarang</a>
+                    <h3>Tidak ada pesanan di tab ini</h3>
+                    <p>Coba cek tab lain atau buat pesanan baru.</p>
+                    <a href="index.php" class="btn-checkout">Belanja Sekarang</a>
                 </div>
             <?php else: ?>
                 
@@ -64,14 +83,27 @@
                             </div>
                         </div>
 
+                        <?php if($order['status'] == 'batal' && !empty($order['catatan_tolak'])): ?>
+                            <div class="reject-alert">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <div>
+                                    <strong>Pesanan Ditolak:</strong><br>
+                                    "<?= $order['catatan_tolak'] ?>"
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="order-footer">
                             <div class="total-price">
                                 <small>Total Belanja</small>
                                 <strong>Rp <?= number_format($order['total_harga'], 0, ',', '.') ?></strong>
                             </div>
                             
-                            <?php if($order['status'] == 'selesai'): ?>
-                                <button class="btn-review">Beli Lagi</button>
+                           <?php if($order['status'] == 'selesai'): ?>
+        
+                                <a href="index.php?action=reorder&id=<?= $order['id'] ?>" class="btn-review" style="text-decoration: none; display: inline-block; text-align: center;">
+                                    Beli Lagi
+                                </a>
                             <?php else: ?>
                                 <button class="btn-track" onclick="trackOrder('<?= $order['kode_pesanan'] ?>')">
                                     Lacak
@@ -87,13 +119,13 @@
 
     </main>
 
-    <script src="public/js/script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <?php include 'views/components/footer_scripts.php'; ?>
+    
     <script>
         function trackOrder(kode) {
             Swal.fire({
                 title: 'Lacak Pesanan',
-                text: 'Kode Pesanan: ' + kode + '\nSedang diproses oleh penjual.',
+                text: 'Kode Pesanan: ' + kode + '\nSilakan hubungi admin jika pesanan belum diproses.',
                 icon: 'info',
                 confirmButtonColor: '#89CFF0'
             });

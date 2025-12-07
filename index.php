@@ -84,7 +84,14 @@ switch ($action) {
             $cart->my_orders();
         }
         break;
-        
+    
+    case 'reorder':
+        if (class_exists('CartController')) {
+            $cart = new CartController();
+            $cart->reorder();
+        }
+        break;
+
     default:
         $controller = new HomeController();
         $controller->index();

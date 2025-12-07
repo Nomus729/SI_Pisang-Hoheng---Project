@@ -133,34 +133,36 @@ class AdminController {
 
     // --- REVISI: UPDATE STATUS & JUMLAH TERJUAL ---
     // --- REVISI 2: LOGIKA STOK & TERJUAL ---
+    // --- REVISI: UPDATE STATUS + CATATAN TOLAK ---
     private function updateStatusPesanan() {
         $input = json_decode(file_get_contents('php://input'), true);
         $id = $input['id'];
-        $status = $input['status']; // status baru (proses, selesai, batal)
+        $status = $input['status'];
+        $reason = isset($input['reason']) ? $input['reason'] : null; // Ambil alasan
 
         try {
             $this->db->beginTransaction();
 
-            // 1. Update Status Pesanan
-            $sql = "UPDATE pesanan SET status = :status WHERE id = :id";
+            // 1. Update Status & Catatan Tolak
+            $sql = "UPDATE pesanan SET status = :status, catatan_tolak = :reason WHERE id = :id";
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':status', $status);
+            $stmt->bindParam(':reason', $reason); // Bind alasan
             $stmt->bindParam(':id', $id);
             $stmt->execute();
 
-            // Ambil detail barang untuk logika stok
+            // 2. Logika Stok (Sama seperti sebelumnya)
+            // Ambil detail barang
             $sqlItems = "SELECT product_name, qty FROM detail_pesanan WHERE pesanan_id = :id";
             $stmtItems = $this->db->prepare($sqlItems);
             $stmtItems->bindParam(':id', $id);
             $stmtItems->execute();
             $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 
-            // 2. Logika Khusus
             if ($status === 'selesai') {
-                // Pesanan Sukses: TAMBAH JUMLAH TERJUAL
+                // Tambah Terjual
                 $sqlUpdate = "UPDATE produk SET terjual = terjual + :qty WHERE nama_produk = :name";
                 $stmtUpdate = $this->db->prepare($sqlUpdate);
-
                 foreach ($items as $item) {
                     $stmtUpdate->bindParam(':qty', $item['qty']);
                     $stmtUpdate->bindParam(':name', $item['product_name']);
@@ -168,10 +170,9 @@ class AdminController {
                 }
             }
             elseif ($status === 'batal') {
-                // Pesanan Batal: KEMBALIKAN STOK (RESTOCK)
+                // Kembalikan Stok (Restock)
                 $sqlRestock = "UPDATE produk SET stok = stok + :qty WHERE nama_produk = :name";
                 $stmtRestock = $this->db->prepare($sqlRestock);
-
                 foreach ($items as $item) {
                     $stmtRestock->bindParam(':qty', $item['qty']);
                     $stmtRestock->bindParam(':name', $item['product_name']);
@@ -180,7 +181,6 @@ class AdminController {
             }
 
             $this->db->commit();
-            
             header('Content-Type: application/json');
             echo json_encode(['status' => 'success']);
 

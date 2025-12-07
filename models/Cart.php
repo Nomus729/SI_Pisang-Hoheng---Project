@@ -149,5 +149,68 @@ public function removeItem($cartId) {
         }
     }
 
+    // --- FUNGSI BELI LAGI (REORDER) ---
+    // --- FUNGSI BELI LAGI (REVISI FIX KOLOM) ---
+    // --- FUNGSI BELI LAGI (REVISI: FIX GAMBAR) ---
+    // --- FUNGSI BELI LAGI (REVISI FINAL: GAMBAR AMAN) ---
+    public function reorder($pesananId, $userId) {
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Ambil item dari riwayat pesanan
+            $sqlGetItems = "SELECT product_name, harga, qty FROM detail_pesanan WHERE pesanan_id = :pid";
+            $stmt = $this->conn->prepare($sqlGetItems);
+            $stmt->bindParam(':pid', $pesananId);
+            $stmt->execute();
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($items)) {
+                $this->conn->rollBack();
+                return false;
+            }
+
+            // Query cek produk master
+            $sqlCekProduk = "SELECT gambar, harga FROM produk WHERE nama_produk = :name LIMIT 1";
+            $stmtCek = $this->conn->prepare($sqlCekProduk);
+
+            foreach ($items as $item) {
+                $namaProduk = $item['product_name'];
+                $qty = $item['qty'];
+
+                // --- LOGIKA GAMBAR & HARGA ---
+                
+                // Default value (jika produk sudah dihapus admin)
+                // Kita asumsikan default.png ada di folder uploads juga, atau ganti path sesuai kebutuhan
+                $hargaFinal = $item['harga'];
+                $gambarFinal = 'uploads/default.png'; 
+
+                // Cek data terbaru di tabel Produk
+                $stmtCek->bindParam(':name', $namaProduk);
+                $stmtCek->execute();
+                $produkTerbaru = $stmtCek->fetch(PDO::FETCH_ASSOC);
+
+                if ($produkTerbaru) {
+                    $hargaFinal = $produkTerbaru['harga']; 
+
+                    if (!empty($produkTerbaru['gambar'])) {
+                        // ========================================================
+                        // FIX: Tambahkan 'uploads/' manual agar path-nya benar
+                        // ========================================================
+                        $gambarFinal = 'uploads/' . $produkTerbaru['gambar'];
+                    }
+                } 
+                
+                // Simpan ke keranjang
+                $this->addToCart($userId, $namaProduk, $hargaFinal, $qty, $gambarFinal);
+            }
+
+            $this->conn->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            return false;
+        }
+    }
 }
 ?>

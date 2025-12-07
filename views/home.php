@@ -95,12 +95,12 @@
                                 </div>
                                 <div class="prod-card-content">
                                     <h3><?= $prod['nama_produk'] ?></h3>
-                                    <div class="prod-details">
+                                    
+                                    <div class="prod-details text-truncate-multiline">
                                         <?= $prod['deskripsi'] ?>
                                     </div>
-                                    <span class="prod-price">
-                                        Rp <?= number_format($prod['harga'], 0, ',', '.') ?>
-                                    </span>
+                                    
+                                    <span class="prod-price">Price : Rp. <?= number_format($prod['harga'], 0, ',', '.') ?></span>
                                 </div>
                             </div>
                         </div>

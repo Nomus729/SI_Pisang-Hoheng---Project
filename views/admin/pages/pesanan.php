@@ -41,7 +41,16 @@
                 <?php foreach($data as $row): ?>
                 <tr>
                     <td><strong>#<?= $row['kode_pesanan'] ?></strong></td>
-                    <td><?= $row['nama_user'] ?></td>
+                    <td>
+                        <?= $row['nama_user'] ?>
+                        
+                        <?php if(!empty($row['catatan'])): ?>
+                            <br>
+                            <small style="color: #666; font-size: 0.85rem; font-style: italic;" title="<?= $row['catatan'] ?>">
+                                Note: "<?= mb_strimwidth($row['catatan'], 0, 30, "...") ?>"
+                            </small>
+                        <?php endif; ?>
+                    </td>
                     <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td>
                     <td>Rp <?= number_format($row['total_harga'], 0, ',', '.') ?></td>
                     <td>

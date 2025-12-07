@@ -195,6 +195,7 @@ class CartController {
     // ... di dalam CartController ...
 
     // FUNGSI PESANAN SAYA
+    // --- FUNGSI PESANAN SAYA (DENGAN FILTER) ---
     public function my_orders() {
         if (session_status() == PHP_SESSION_NONE) session_start();
 
@@ -204,17 +205,32 @@ class CartController {
         }
 
         $userId = $_SESSION['user_id'];
+        $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all'; // Tangkap filter
+
         $database = new Database();
         $db = $database->getConnection();
 
-        // Ambil Pesanan User
-        $sql = "SELECT * FROM pesanan WHERE user_id = :uid ORDER BY tanggal DESC";
+        // Query Dasar
+        $sql = "SELECT * FROM pesanan WHERE user_id = :uid";
+
+        // Tambahkan Filter jika bukan 'all'
+        if ($statusFilter != 'all') {
+            $sql .= " AND status = :status";
+        }
+
+        $sql .= " ORDER BY tanggal DESC"; // Urutkan terbaru
+
         $stmt = $db->prepare($sql);
         $stmt->bindParam(':uid', $userId);
+        
+        if ($statusFilter != 'all') {
+            $stmt->bindParam(':status', $statusFilter);
+        }
+
         $stmt->execute();
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Ambil Detail Item untuk setiap pesanan (Opsional, atau ambil via AJAX nanti)
+        // Ambil Detail Item
         foreach ($orders as &$order) {
             $sqlItem = "SELECT product_name, qty FROM detail_pesanan WHERE pesanan_id = :pid";
             $stmtItem = $db->prepare($sqlItem);
@@ -225,10 +241,48 @@ class CartController {
 
         $data = [
             'title' => 'Pesanan Saya - Si Pisang',
-            'orders' => $orders
+            'orders' => $orders,
+            'current_status' => $statusFilter // Kirim status aktif ke View
         ];
 
         require 'views/my_orders.php';
+    }
+
+    // --- FUNGSI REORDER ---
+    // --- FUNGSI REORDER (Controller) ---
+    public function reorder() {
+        // Tidak perlu session_start() karena sudah di index.php
+        
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: index.php");
+            exit;
+        }
+
+        $userId = $_SESSION['user_id'];
+        $pesananId = isset($_GET['id']) ? $_GET['id'] : null;
+
+        if ($pesananId) {
+            $database = new Database();
+            $db = $database->getConnection();
+            $cartModel = new Cart($db);
+
+            if ($cartModel->reorder($pesananId, $userId)) {
+                // SUKSES: Redirect ke Keranjang
+                $_SESSION['flash_icon'] = 'success';
+                $_SESSION['flash_title'] = 'Berhasil!';
+                $_SESSION['flash_text'] = 'Pesanan dimasukkan ke keranjang.';
+                header("Location: index.php?action=cart");
+            } else {
+                // GAGAL: Redirect balik ke My Orders
+                $_SESSION['flash_icon'] = 'error';
+                $_SESSION['flash_title'] = 'Gagal!';
+                $_SESSION['flash_text'] = 'Gagal memproses pesanan ulang. Produk mungkin sudah tidak tersedia.';
+                header("Location: index.php?action=my_orders");
+            }
+        } else {
+            header("Location: index.php?action=my_orders");
+        }
+        exit;
     }
 }
 ?>
