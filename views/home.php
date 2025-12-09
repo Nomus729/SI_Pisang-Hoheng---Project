@@ -18,28 +18,59 @@
         <section id="hero" class="hero-grid">
             <div class="hero-main card-blue">
                 <div class="hero-text">
-                    <h2>Produk Unggulan</h2>
-                    <h1><?= $data['hero_product']['name'] ?></h1>
-                    <p><?= $data['hero_product']['desc'] ?></p>
-                    <div class="rating-badge">
-                        <span><?= $data['hero_product']['rating'] ?></span>
-                        <i class="fas fa-star"></i>
+                    <div class="badge-pill animate-fade-in">
+                        <i class="fas fa-crown text-warning"></i> Produk Unggulan
                     </div>
-                    <button class="btn-order">Order Now</button>
+
+                    <h1 class="animate-slide-up"><?= htmlspecialchars($data['hero_product']['nama_produk']) ?></h1>
+                    <p class="animate-slide-up delay-1"><?= htmlspecialchars($data['hero_product']['deskripsi']) ?></p>
+
+                    <div class="hero-stats animate-slide-up delay-2">
+                        <div class="stat-item">
+                            <i class="fas fa-star text-warning"></i> 4.9
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <i class="fas fa-fire text-danger"></i> <?= $data['hero_product']['terjual'] ?? 0 ?>+ Terjual
+                        </div>
+                    </div>
+
+                    <a href="#menu" class="btn-order animate-scale-in delay-3">
+                        Order Now <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <div class="hero-img">
-                    <img src="<?= $data['hero_product']['image'] ?>" alt="Hero">
+
+                <div class="hero-img animate-float">
+                    <?php
+                    $img = $data['hero_product']['gambar'];
+                    $imgPath = ($img === 'default.png' || strpos($img, 'hero-pisang') !== false)
+                        ? 'public/img/hero-pisang.png'
+                        : 'uploads/' . $img;
+                    ?>
+                    <img src="<?= $imgPath ?>" alt="<?= htmlspecialchars($data['hero_product']['nama_produk']) ?>">
+
+                    <!-- Floating Price Tag -->
+                    <div class="floating-price">
+                        Rp <?= number_format($data['hero_product']['harga'], 0, ',', '.') ?>
+                    </div>
                 </div>
             </div>
+
             <div class="hero-side">
                 <div class="category-card card-cyan">
-                    <h3>Kategori<br>Makanan</h3>
-                    <a href="#">Go Daftar Makanan <i class="fas fa-arrow-right"></i></a>
+                    <div class="cat-content">
+                        <h3>Makanan</h3>
+                        <span class="cat-count"><?= $data['cat_counts']['makanan'] ?> Pilihan Menu</span>
+                        <a href="index.php?kategori=makanan#menu" class="btn-cat-link">Lihat Menu <i class="fas fa-chevron-right"></i></a>
+                    </div>
                     <img src="https://placehold.co/100x100/ffa500/fff?text=F" class="cat-img">
                 </div>
                 <div class="category-card card-blue-light">
-                    <h3>Kategori<br>Minuman</h3>
-                    <a href="#">Go Daftar Minuman <i class="fas fa-arrow-right"></i></a>
+                    <div class="cat-content">
+                        <h3>Minuman</h3>
+                        <span class="cat-count"><?= $data['cat_counts']['minuman'] ?> Pilihan Menu</span>
+                        <a href="index.php?kategori=minuman#menu" class="btn-cat-link">Lihat Menu <i class="fas fa-chevron-right"></i></a>
+                    </div>
                     <img src="https://placehold.co/80x100/8B4513/fff?text=D" class="cat-img">
                 </div>
             </div>
@@ -47,51 +78,21 @@
 
         <section id="menu" class="menu-section reveal-on-scroll">
             <h2>Daftar Menu</h2>
-            <div class="menu-grid">
-                <?php foreach ($data['menu_items'] as $item): ?>
-                    <div class="menu-card">
-                        <div class="card-img">
-                            <img src="uploads/<?= $item['gambar'] ?>" alt="<?= $item['nama_produk'] ?>" onerror="this.src='https://placehold.co/200x150'">
-                        </div>
-                        <div class="card-body">
-                            <h4><?= $item['nama_produk'] ?></h4>
-                            <div class="meta-info">
-                                <span class="pcs">100 pcs</span>
-                                <span class="rating">4.9 <i class="fas fa-star"></i></span>
-                            </div>
-                            <div class="card-actions">
-                                <div class="qty-control">
-                                    <button class="btn-qty btn-minus">-</button>
-                                    <span class="qty-val">1</span>
-                                    <button class="btn-qty btn-plus">+</button>
-                                </div>
-                                <button class="cart-btn add-to-cart-btn"
-                                    data-name="<?= $item['nama_produk'] ?>"
-                                    data-price="<?= $item['harga'] ?>"
-                                    data-image="uploads/<?= $item['gambar'] ?>">
-                                    <i class="fas fa-shopping-cart"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+
+            <?php $curCat = isset($data['pagination']['current_category']) ? $data['pagination']['current_category'] : ''; ?>
+            <div class="menu-filter">
+                <button data-kategori="" class="filter-landing-btn <?= $curCat == '' ? 'active' : '' ?>">Semua</button>
+                <button data-kategori="makanan" class="filter-landing-btn <?= $curCat == 'makanan' ? 'active' : '' ?>">Makanan</button>
+                <button data-kategori="minuman" class="filter-landing-btn <?= $curCat == 'minuman' ? 'active' : '' ?>">Minuman</button>
             </div>
-            <div class="pagination-container">
-                <?php for ($i = 1; $i <= $data['pagination']['total_pages']; $i++): ?>
-                    <?php
-                    $searchParam = isset($data['pagination']['search_query']) && !empty($data['pagination']['search_query'])
-                        ? '&search=' . urlencode($data['pagination']['search_query'])
-                        : '';
-                    ?>
-                    <a href="index.php?halaman=<?= $i ?><?= $searchParam ?>#menu" class="page-link <?= ($i == $data['pagination']['current_page']) ? 'active' : '' ?>">
-                        <?= $i ?>
-                    </a>
-                <?php endfor; ?>
+
+            <div id="menu-container">
+                <?php include 'views/components/menu_list.php'; ?>
             </div>
         </section>
 
         <section id="produk" class="product-section reveal-on-scroll">
-            <h2>Produk Lainnya</h2>
+            <h2>Menu Selengkapnya</h2>
             <div class="swiper product-swiper">
                 <div class="swiper-wrapper">
                     <?php foreach ($data['all_products'] as $prod): ?>
@@ -130,6 +131,8 @@
             </div>
         </section>
     </main>
+
+    <?php include 'views/components/footer.php'; ?>
 
     <div class="modal-overlay" id="authModal">
         <div class="modal-container">

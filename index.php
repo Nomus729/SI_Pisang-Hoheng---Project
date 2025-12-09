@@ -1,6 +1,6 @@
 <?php
 // 1. Wajib ditaruh paling atas untuk menangani login/logout
-session_start(); 
+session_start();
 ob_start(); // Mencegah error "Cannot modify header info"
 
 // 2. Load Controllers
@@ -20,12 +20,12 @@ switch ($action) {
         $auth = new AuthController();
         $auth->login();
         break;
-        
+
     case 'register':
         $auth = new AuthController();
         $auth->register();
         break;
-        
+
     case 'logout':
         $auth = new AuthController();
         $auth->logout();
@@ -37,7 +37,7 @@ switch ($action) {
             $cart->index();
         }
         break;
-        
+
     case 'checkout':
         if (class_exists('CartController')) {
             $cart = new CartController();
@@ -84,12 +84,24 @@ switch ($action) {
             $cart->my_orders();
         }
         break;
-    
+
     case 'reorder':
         if (class_exists('CartController')) {
             $cart = new CartController();
             $cart->reorder();
         }
+        break;
+
+    case 'reorder':
+        if (class_exists('CartController')) {
+            $cart = new CartController();
+            $cart->reorder();
+        }
+        break;
+
+    case 'info':
+        $controller = new HomeController();
+        $controller->info();
         break;
 
     default:
@@ -99,6 +111,3 @@ switch ($action) {
 }
 
 ob_end_flush(); // Kirim output buffer
-?>
-
-

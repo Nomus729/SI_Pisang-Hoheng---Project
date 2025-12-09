@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const navLinks = document.querySelectorAll(".nav-links a");
     const indicator = document.querySelector(".nav-indicator");
-    const sections = document.querySelectorAll("section");
+    const sections = document.querySelectorAll("section, footer");
 
 
     // =========================================
@@ -580,6 +580,124 @@ document.addEventListener("DOMContentLoaded", function () {
                     spaceBetween: 40,
                 },
             },
+        });
+    }
+
+    // =========================================
+    // 13. AJAX FILTERING & PAGINATION
+    // =========================================
+    const filterBtns = document.querySelectorAll('.filter-landing-btn');
+    const menuContainer = document.getElementById('menu-container');
+
+    if (filterBtns.length > 0 && menuContainer) {
+
+        // A. Fungsi Load Menu via AJAX
+        function loadMenu(url) {
+            menuContainer.style.opacity = '0.5';
+
+            // Pisahkan Hash (#) agar parameter tidak dianggap fragment
+            let [baseUrl, hash] = url.split('#');
+
+            let fetchUrl = baseUrl;
+            if (!fetchUrl.includes('action_ajax')) {
+                fetchUrl += (fetchUrl.includes('?') ? '&' : '?') + 'action_ajax=filter_menu';
+            }
+
+            fetch(fetchUrl)
+                .then(res => res.json())
+                .then(data => {
+                    menuContainer.innerHTML = data.html;
+                    menuContainer.style.opacity = '1';
+
+                    let historyUrl = url.replace(/(&|\?)action_ajax=filter_menu/, '');
+                    window.history.pushState({ path: url }, '', historyUrl);
+                })
+                .catch(err => {
+                    console.error(err);
+                    menuContainer.style.opacity = '1';
+                });
+        }
+
+        // B. Listener Filter Buttons
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const kategori = this.getAttribute('data-kategori');
+                const urlParams = new URLSearchParams(window.location.search);
+                const search = urlParams.get('search') || '';
+
+                let newUrl = `index.php?halaman=1`;
+                if (kategori) newUrl += `&kategori=${kategori}`;
+                if (search) newUrl += `&search=${search}`;
+                newUrl += '#menu';
+
+                loadMenu(newUrl);
+            });
+        });
+
+        // C. Listener Pagination (Delegation)
+        menuContainer.addEventListener('click', function (e) {
+            const link = e.target.closest('.page-link');
+            if (link) {
+                e.preventDefault();
+                loadMenu(link.getAttribute('href'));
+            }
+        });
+
+        // D. Fix Add to Cart for AJAX Content (Delegation)
+        menuContainer.addEventListener('click', function (e) {
+            // A. Plus
+            if (e.target.classList.contains('btn-plus')) {
+                e.stopPropagation();
+                const qtySpan = e.target.previousElementSibling;
+                let val = parseInt(qtySpan.innerText);
+                qtySpan.innerText = val + 1;
+                return;
+            }
+            // B. Minus
+            if (e.target.classList.contains('btn-minus')) {
+                e.stopPropagation();
+                const qtySpan = e.target.nextElementSibling;
+                let val = parseInt(qtySpan.innerText);
+                if (val > 1) qtySpan.innerText = val - 1;
+                return;
+            }
+            // C. Add to Cart
+            const cartBtn = e.target.closest('.add-to-cart-btn');
+            if (cartBtn) {
+                e.preventDefault();
+                const name = cartBtn.getAttribute('data-name');
+                const price = cartBtn.getAttribute('data-price');
+                const image = cartBtn.getAttribute('data-image');
+                const cardActions = cartBtn.parentElement;
+                const qtySpan = cardActions.querySelector('.qty-val');
+                const qtyVal = parseInt(qtySpan.innerText);
+
+                fetch('index.php?action=add_to_cart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, price: price, qty: qtyVal, image: image })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const badge = document.getElementById('cartBadge');
+                            if (badge) {
+                                let currentCount = parseInt(badge.innerText) || 0;
+                                badge.innerText = currentCount + qtyVal;
+                                badge.classList.remove('hidden');
+                            }
+                            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Berhasil masuk keranjang.', showConfirmButton: false, timer: 1500 });
+                        } else {
+                            Swal.fire({ icon: 'warning', title: 'Gagal', text: data.message, confirmButtonColor: '#89CFF0' })
+                                .then(() => { if (data.message.includes('login') && modal) modal.style.display = "flex"; });
+                        }
+                    });
+            }
         });
     }
 

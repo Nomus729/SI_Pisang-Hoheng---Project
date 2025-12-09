@@ -40,11 +40,17 @@ class AdminController
 
         // --- 2. HANDLER POST (SIMPAN PRODUK) ---
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->simpanProduk();
-            return;
-        }
-
-        // --- 3. HANDLER VIEW (NAVIGASI) ---
+            if (isset($_GET['action_post'])) {
+                if ($_GET['action_post'] == 'simpan_produk') {
+                    $this->simpanProduk();
+                    return;
+                }
+                if ($_GET['action_post'] == 'update_settings') {
+                    $this->updateSettings();
+                    return;
+                }
+            }
+        }     // --- 3. HANDLER VIEW (NAVIGASI) ---
         $view = isset($_GET['page']) ? $_GET['page'] : 'daftar_produk';
         $data = [];
 
@@ -79,6 +85,10 @@ class AdminController
 
             case 'laporan_produk':
                 $data = $this->getLaporanProduk();
+                break;
+
+            case 'setting_info':
+                $data = $this->getSettings();
                 break;
 
             case 'log_activity':
@@ -233,6 +243,7 @@ class AdminController
         $nama = $_POST['nama'];
         $harga = $_POST['harga'];
         $stok = $_POST['stok'];
+        $kategori = $_POST['kategori'];
         $detail = $_POST['detail'];
 
         if (empty($nama) || empty($harga) || empty($stok)) {
@@ -246,6 +257,7 @@ class AdminController
             ':nama' => $nama,
             ':harga' => $harga,
             ':stok' => $stok,
+            ':kategori' => $kategori,
             ':detail' => $detail
         ];
 
@@ -264,11 +276,11 @@ class AdminController
         }
 
         if ($id) {
-            $sql = "UPDATE produk SET kode_barang=:kode, nama_produk=:nama, harga=:harga, stok=:stok, deskripsi=:detail $gambarQuery WHERE id=:id";
+            $sql = "UPDATE produk SET kode_barang=:kode, nama_produk=:nama, harga=:harga, stok=:stok, deskripsi=:detail, kategori=:kategori $gambarQuery WHERE id=:id";
             $params[':id'] = $id;
         } else {
             $sql = "INSERT INTO produk (kode_barang, nama_produk, harga, stok, deskripsi, gambar, kategori) 
-                    VALUES (:kode, :nama, :harga, :stok, :detail, " . (isset($params[':gambar']) ? ":gambar" : "'default.png'") . ", 'Makanan')";
+                    VALUES (:kode, :nama, :harga, :stok, :detail, " . (isset($params[':gambar']) ? ":gambar" : "'default.png'") . ", :kategori)";
         }
 
         $stmt = $this->db->prepare($sql);
@@ -329,10 +341,81 @@ class AdminController
 
     private function getLaporanKeuangan()
     {
+        $startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
+        $endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
+
+        // 1. Total Pendapatan (Dalam Periode)
+        $sqlTotal = "SELECT SUM(total_harga) as total FROM pesanan WHERE status = 'selesai' AND DATE(tanggal) BETWEEN :start AND :end";
+        $stmtTotal = $this->db->prepare($sqlTotal);
+        $stmtTotal->execute([':start' => $startDate, ':end' => $endDate]);
+        $totalRevenue = $stmtTotal->fetchColumn() ?: 0;
+
+        // 2. Grafik Tren Pendapatan (Harian)
+        $sqlTrend = "SELECT DATE(tanggal) as tgl, SUM(total_harga) as total 
+                     FROM pesanan 
+                     WHERE status = 'selesai' AND DATE(tanggal) BETWEEN :start AND :end
+                     GROUP BY DATE(tanggal) 
+                     ORDER BY tgl ASC";
+        $stmtTrend = $this->db->prepare($sqlTrend);
+        $stmtTrend->execute([':start' => $startDate, ':end' => $endDate]);
+        $trendData = $stmtTrend->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        // Fill missing dates
+        $chartLabels = [];
+        $chartData = [];
+        $period = new DatePeriod(
+            new DateTime($startDate),
+            new DateInterval('P1D'),
+            (new DateTime($endDate))->modify('+1 day')
+        );
+
+        foreach ($period as $date) {
+            $d = $date->format('Y-m-d');
+            $chartLabels[] = $date->format('d M');
+            $chartData[] = isset($trendData[$d]) ? $trendData[$d] : 0;
+        }
+
+        // 3. Grafik Kategori (Makanan vs Minuman)
+        // Join ke detail_pesanan -> produk untuk dapat kategori
+        // Note: 'kategori' ada di tabel 'produk'. detail_pesanan punya product_name.
+        // Asumsi: detail_pesanan menyimpan snapshot harga/qty, tapi kategori ambil dari master produk via nama?
+        // Atau via ID jika ada relasi. Tabel detail_pesanan (pesanan_id, product_name, qty, price).
+        // Join: detail_pesanan d JOIN produk p ON d.product_name = p.nama_produk
+        $sqlCat = "SELECT p.kategori, SUM(d.qty * d.harga) as subtotal
+                   FROM detail_pesanan d
+                   JOIN pesanan o ON d.pesanan_id = o.id
+                   JOIN produk p ON d.product_name = p.nama_produk
+                   WHERE o.status = 'selesai' AND DATE(o.tanggal) BETWEEN :start AND :end
+                   GROUP BY p.kategori";
+        $stmtCat = $this->db->prepare($sqlCat);
+        $stmtCat->execute([':start' => $startDate, ':end' => $endDate]);
+        $catData = $stmtCat->fetchAll(PDO::FETCH_KEY_PAIR); // ['Makanan' => 50000, 'Minuman' => 20000]
+
+        // 4. Top 5 Produk Terlaris (Revenue)
+        $sqlTop = "SELECT d.product_name, SUM(d.qty) as total_qty, SUM(d.qty * d.harga) as total_inc
+                   FROM detail_pesanan d
+                   JOIN pesanan o ON d.pesanan_id = o.id
+                   WHERE o.status = 'selesai' AND DATE(o.tanggal) BETWEEN :start AND :end
+                   GROUP BY d.product_name
+                   ORDER BY total_inc DESC
+                   LIMIT 5";
+        $stmtTop = $this->db->prepare($sqlTop);
+        $stmtTop->execute([':start' => $startDate, ':end' => $endDate]);
+        $topProducts = $stmtTop->fetchAll(PDO::FETCH_ASSOC);
+
         return [
-            'pendapatan' => [1500000, 2300000, 1800000, 3200000],
-            'pengeluaran' => [500000, 800000, 600000, 1200000],
-            'bulan' => ['Jan', 'Feb', 'Mar', 'Apr']
+            'total_revenue' => $totalRevenue,
+            'chart_labels' => $chartLabels,
+            'chart_data' => $chartData, // Pendapatan
+            // Estimasi Pengeluaran (Misal 60% dari Pendapatan adalah HPP/Biaya) - Simulasi
+            'expense_data' => array_map(function ($v) {
+                return $v * 0.6;
+            }, $chartData),
+            'category_labels' => array_keys($catData),
+            'category_data' => array_values($catData),
+            'top_products' => $topProducts,
+            'start_date' => $startDate,
+            'end_date' => $endDate
         ];
     }
 
@@ -403,5 +486,56 @@ class AdminController
         require_once 'models/Log.php';
         $log = new Log($this->db);
         return $log->getAll();
+    }
+
+    // ---  ---
+    private function getSettings()
+    {
+        $stmt = $this->db->query("SELECT setting_key, setting_value FROM site_settings");
+        $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR); // ['phone' => '123', 'email' => 'abc']
+        return $settings;
+    }
+
+    private function updateSettings()
+    {
+        $keys = [
+            'address',
+            'phone',
+            'email',
+            'hours_mon_fri',
+            'hours_sat_sun',
+            'social_ig',
+            'social_fb',
+            'social_wa',
+            'social_tt',
+            'map_embed'
+        ];
+
+        try {
+            $this->db->beginTransaction();
+
+            foreach ($keys as $key) {
+                if (isset($_POST[$key])) {
+                    $val = $_POST[$key];
+                    $sql = "INSERT INTO site_settings (setting_key, setting_value) VALUES (:k, :v) 
+                            ON DUPLICATE KEY UPDATE setting_value = :v";
+                    $stmt = $this->db->prepare($sql);
+                    $stmt->execute([':k' => $key, ':v' => $val]);
+                }
+            }
+
+            $this->db->commit();
+            $_SESSION['flash_icon'] = 'success';
+            $_SESSION['flash_title'] = 'Berhasil!';
+            $_SESSION['flash_text'] = 'Informasi website berhasil diperbarui.';
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            $_SESSION['flash_icon'] = 'error';
+            $_SESSION['flash_title'] = 'Gagal!';
+            $_SESSION['flash_text'] = 'Terjadi kesalahan sistem.';
+        }
+
+        header("Location: index.php?action=dashboard&page=setting_info");
+        exit;
     }
 }

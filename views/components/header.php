@@ -99,7 +99,8 @@ if (isset($_SESSION['user_id'])) {
             <a href="index.php#hero" class="active">Home</a>
             <a href="index.php#menu">Menu</a>
             <a href="index.php#produk">Produk</a>
-            <a href="index.php#contact">Contact</a>
+
+            <a href="#contact">Contact</a>
             <div class="nav-indicator"></div>
         </nav>
     </div>

@@ -2,7 +2,7 @@
 // Load file database
 require_once 'config/Database.php';
 
-// Koneksi ke Database
+//  ke Database
 $database = new Database();
 $db = $database->getConnection();
 
@@ -36,4 +36,3 @@ if ($stmt->execute($params)) {
     echo "<h1>GAGAL ❌</h1>";
     print_r($stmt->errorInfo());
 }
-?>

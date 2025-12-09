@@ -58,6 +58,9 @@
                     <a href="index.php?action=dashboard&page=laporan_produk" class="menu-item <?= ($view == 'laporan_produk') ? 'active' : '' ?>" data-tooltip="Statistik Produk">
                         <i class="fas fa-chart-pie"></i> <span>Statistik Produk</span>
                     </a>
+                    <a href="index.php?action=dashboard&page=setting_info" class="menu-item <?= ($view == 'setting_info') ? 'active' : '' ?>" data-tooltip="Pengaturan Info">
+                        <i class="fas fa-cog"></i> <span>Info</span>
+                    </a>
                     <a href="index.php?action=dashboard&page=log_activity" class="menu-item <?= ($view == 'log_activity') ? 'active' : '' ?>" data-tooltip="Log Aktivitas">
                         <i class="fas fa-history"></i> <span>Log Aktivitas</span>
                     </a>

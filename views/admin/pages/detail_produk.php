@@ -1,40 +1,53 @@
 <div class="card-box">
     <h3><?= isset($data['id']) ? 'Edit Produk' : 'Tambah Produk Baru' ?></h3>
-    
-<form id="formProduk" action="" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-    
-    <?php if(isset($data['id'])): ?>
-        <input type="hidden" name="id" value="<?= $data['id'] ?>">
-    <?php endif; ?>
-        
+
+    <form id="formProduk" action="index.php?action=dashboard&page=detail_produk&action_post=simpan_produk" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+
+        <?php if (isset($data['id'])): ?>
+            <input type="hidden" name="id" value="<?= $data['id'] ?>">
+        <?php endif; ?>
+
         <div class="row-2">
             <div class="form-group">
                 <label>Nama Produk</label>
-                <input type="text" name="nama" value="<?= $data['nama_produk'] ?? '' ?>" 
-                       pattern="[a-zA-Z\s]+" title="Hanya boleh huruf dan spasi" required>
+                <input type="text" name="nama" value="<?= $data['nama_produk'] ?? '' ?>"
+                    pattern="[a-zA-Z\s]+" title="Hanya boleh huruf dan spasi" required>
             </div>
             <div class="form-group">
                 <label>Kode Barang (ID)</label>
-                <input type="text" name="kode" value="<?= $data['kode_barang'] ?? 'BRG'.rand(1000,9999) ?>" 
-                       style="background-color: #eee; cursor: not-allowed;" readonly>
+                <input type="text" name="kode" value="<?= $data['kode_barang'] ?? 'BRG' . rand(1000, 9999) ?>"
+                    style="background-color: #eee; cursor: not-allowed;" readonly>
             </div>
         </div>
 
         <div class="row-2">
             <div class="form-group">
                 <label>Harga (Rp)</label>
-                <input type="text" id="hargaInput" name="harga_display" 
-                       value="<?= isset($data['harga']) ? 'Rp ' . number_format($data['harga'], 0, ',', '.') : '' ?>" 
-                       placeholder="Rp 0" required>
-                
+                <input type="text" id="hargaInput" name="harga_display"
+                    value="<?= isset($data['harga']) ? 'Rp ' . number_format($data['harga'], 0, ',', '.') : '' ?>"
+                    placeholder="Rp 0" required>
+
                 <input type="hidden" id="hargaReal" name="harga" value="<?= $data['harga'] ?? '' ?>">
             </div>
-            
+
             <div class="form-group">
                 <label>Stok Awal</label>
-                <input type="text" name="stok" 
-                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       value="<?= $data['stok'] ?? '' ?>" required>
+                <input type="text" name="stok"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    value="<?= $data['stok'] ?? '' ?>" required>
+            </div>
+        </div>
+
+        <div class="row-2">
+            <div class="form-group">
+                <label>Kategori</label>
+                <select name="kategori" required style="width:100%; padding:10px; background:#f9f9f9; border:1px solid #ddd; border-radius:5px;">
+                    <option value="Makanan" <?= (isset($data['kategori']) && $data['kategori'] == 'Makanan') ? 'selected' : '' ?>>Makanan</option>
+                    <option value="Minuman" <?= (isset($data['kategori']) && $data['kategori'] == 'Minuman') ? 'selected' : '' ?>>Minuman</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <!-- Spacer for layout balance -->
             </div>
         </div>
 
@@ -49,10 +62,10 @@
         <div class="form-group">
             <label>Upload Gambar</label>
             <input type="file" name="gambar" id="imgInp" accept="image/*" <?= isset($data['gambar']) ? '' : 'required' ?>>
-            
+
             <div style="margin-top: 10px;">
-                <img id="blah" src="<?= isset($data['gambar']) ? 'uploads/'.$data['gambar'] : 'https://placehold.co/150x150?text=Preview' ?>" 
-                     width="150" height="150" style="object-fit: cover; border-radius: 10px; border: 1px solid #ddd;">
+                <img id="blah" src="<?= isset($data['gambar']) ? 'uploads/' . $data['gambar'] : 'https://placehold.co/150x150?text=Preview' ?>"
+                    width="150" height="150" style="object-fit: cover; border-radius: 10px; border: 1px solid #ddd;">
             </div>
         </div>
 
@@ -71,17 +84,17 @@
 
     // 2. Auto Bullet Point pada Textarea
     const detailInput = document.getElementById('detailInput');
-    
+
     // Saat user mengetik
     detailInput.addEventListener('keyup', function(e) {
         if (e.key === 'Enter') {
             const cursor = this.selectionStart;
             const value = this.value;
-            
+
             // REVISI: Gunakan "- " (Strip) bukan bullet
             this.value = value.substring(0, cursor) + "- " + value.substring(cursor);
-            
-            this.selectionStart = this.selectionEnd = cursor + 2; 
+
+            this.selectionStart = this.selectionEnd = cursor + 2;
         }
     });
 
@@ -96,7 +109,7 @@
     function validateForm() {
         const harga = document.querySelector('input[name="harga"]').value;
         const stok = document.querySelector('input[name="stok"]').value;
-        
+
         if (isNaN(harga) || harga <= 0) {
             alert("Harga harus berupa angka dan lebih dari 0!");
             return false;
@@ -116,7 +129,7 @@
     hargaInput.addEventListener('keyup', function(e) {
         // Ambil value, hapus semua karakter selain angka
         let value = this.value.replace(/[^0-9]/g, '');
-        
+
         // Simpan nilai asli (angka) ke input hidden untuk dikirim ke DB
         hargaReal.value = value;
 
