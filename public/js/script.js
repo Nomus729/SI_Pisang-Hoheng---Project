@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    
+
     // =========================================
     // 1. VARIABEL GLOBAL & SETUP
     // =========================================
@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("authModal");
     const openBtn = document.getElementById("openLoginBtn");
     const closeBtn = document.querySelector(".close-modal");
-    
+
     const loginFormBox = document.getElementById("loginForm");
     const registerFormBox = document.getElementById("registerForm");
     const showRegister = document.getElementById("showRegister");
@@ -35,9 +35,9 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmButtonColor: '#89CFF0',
             confirmButtonText: 'Oke'
         }).then(() => {
-            if(keepModal === 'login') {
+            if (keepModal === 'login') {
                 const emailInput = document.querySelector('input[name="email"]');
-                if(emailInput) emailInput.focus();
+                if (emailInput) emailInput.focus();
             }
         });
 
@@ -56,9 +56,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function handleFormSubmit(formId) {
         const form = document.getElementById(formId);
         if (form) {
-            form.addEventListener('submit', function() {
+            form.addEventListener('submit', function () {
                 const btn = form.querySelector('button[type="submit"]');
-                if(btn) {
+                if (btn) {
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                     btn.style.opacity = '0.7';
                     btn.style.cursor = 'not-allowed';
@@ -71,8 +71,118 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
-    // 4. STICKY HEADER & SCROLL SPY
+    // 4. STICKY HEADER & SCROLL SPY (GSAP VERSION)
     // =========================================
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Animasi Navbar Smooth dengan GSAP Scrub
+    // Force Z-Index via GSAP to ensure it stays on top
+    gsap.set(".main-header", { zIndex: 99999 });
+
+    // GSAP ScrollTrigger dengan MatchMedia (Hanya jalan di Desktop)
+    let mm = gsap.matchMedia();
+
+    mm.add("(min-width: 901px)", () => {
+
+        // 1. Toggle Class .sticky menggunakan Event Listener Standar (Desktop Only)
+        window.addEventListener("scroll", handleDesktopScroll);
+
+        function handleDesktopScroll() {
+            const header = document.querySelector(".main-header");
+            if (window.scrollY > 10) {
+                header.classList.add("sticky");
+            } else {
+                header.classList.remove("sticky");
+            }
+        }
+
+        // 2. Animasi Properti (Timeline)
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "body",
+                start: "top top",
+                end: "+=150",
+                scrub: 0.5,
+            }
+        });
+
+        tl.to(".main-header", {
+            height: "80px",
+            backgroundColor: "rgba(255, 255, 255, 0.98)",
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.05)",
+            padding: "10px 5%",
+            duration: 1
+        }, 0)
+            .to(".logo img", {
+                width: "35px",
+                duration: 1
+            }, 0)
+            .to(".brand-name", {
+                fontSize: "1.1rem",
+                duration: 1
+            }, 0)
+            .to(".brand-sub", {
+                fontSize: "0.65rem",
+                duration: 1
+            }, 0)
+            .to(".nav-links", {
+                paddingTop: "0px",
+                duration: 1
+            }, 0)
+            // Pastikan Search Bar mengecil agar muat dalam 1 baris
+            .to(".search-bar", {
+                maxWidth: "250px",
+                margin: "0 15px",
+                duration: 1
+            }, 0)
+            .to(".search-bar input", {
+                paddingTop: "8px",
+                paddingBottom: "8px",
+                backgroundColor: "#f1f1f1",
+                duration: 1
+            }, 0);
+
+        return () => { // Cleanup
+            window.removeEventListener("scroll", handleDesktopScroll);
+            const header = document.querySelector(".main-header");
+            if (header) header.classList.remove("sticky"); // Reset
+            // GSAP auto reverts style properties
+        };
+    });
+
+    // =========================================
+    // MOBILE MENU TOGGLE
+    // =========================================
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navLinksContainer = document.querySelector('.nav-links');
+
+    if (mobileMenuBtn && navLinksContainer) {
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinksContainer.classList.toggle('active');
+
+            // Icon transformation (Bars <-> Times)
+            const icon = mobileMenuBtn.querySelector('i');
+            if (navLinksContainer.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Close menu when clicking link
+        navLinksContainer.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinksContainer.classList.remove('active');
+                const icon = mobileMenuBtn.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            });
+        });
+    }
+
+    // Scroll Spy (Active Menu) - Tetap pakai logic intersect atau manual tapi dioptimalkan
     function moveIndicator(element) {
         if (!element || !indicator) return;
         indicator.style.width = `${element.offsetWidth}px`;
@@ -80,42 +190,33 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const initialActive = document.querySelector(".nav-links a.active");
-    if(initialActive) moveIndicator(initialActive);
+    if (initialActive) moveIndicator(initialActive);
 
-    window.addEventListener("scroll", function() {
-        // Matikan animasi jika di halaman cart/checkout
-        if (document.body.classList.contains('no-animation')) return;
-
-        let currentScroll = window.pageYOffset;
-
-        // Sticky Header
-        if (header) {
-            if (currentScroll > 20) header.classList.add("sticky");
-            else header.classList.remove("sticky");
-        }
-
-        // Scroll Spy (Active Menu)
-        let currentSectionId = "";
-        if(sections.length > 0) {
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (currentScroll >= (sectionTop - 250)) {
-                    currentSectionId = section.getAttribute("id");
-                }
+    // Gunakan ScrollTrigger untuk update active state
+    if (sections.length > 0) {
+        sections.forEach(section => {
+            ScrollTrigger.create({
+                trigger: section,
+                start: "top center",
+                end: "bottom center",
+                onEnter: () => updateActive(section.id),
+                onEnterBack: () => updateActive(section.id)
             });
-        }
+        });
+    }
 
+    function updateActive(id) {
         navLinks.forEach(link => {
             link.classList.remove("active");
-            if (currentSectionId && link.getAttribute("href").includes(currentSectionId)) {
+            if (link.getAttribute("href").includes(id)) {
                 link.classList.add("active");
-                moveIndicator(link); 
+                moveIndicator(link);
             }
         });
-    });
+    }
 
     navLinks.forEach(link => {
-        link.addEventListener("click", function() {
+        link.addEventListener("click", function () {
             moveIndicator(this);
         });
     });
@@ -144,12 +245,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (openBtn) {
         openBtn.addEventListener("click", (e) => {
             e.preventDefault();
-            if(modal) modal.style.display = "flex";
+            if (modal) modal.style.display = "flex";
         });
     }
     if (closeBtn) {
         closeBtn.addEventListener("click", () => {
-            if(modal) modal.style.display = "none";
+            if (modal) modal.style.display = "none";
         });
     }
     window.addEventListener("click", (e) => {
@@ -207,10 +308,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // 8. ADD TO CART (DARI MENU UTAMA) - REVISI
     // =========================================
     const menuGrid = document.querySelector('.menu-grid');
-    
+
     if (menuGrid) {
-        menuGrid.addEventListener('click', function(e) {
-            
+        menuGrid.addEventListener('click', function (e) {
+
             // A. Handle Tombol Plus (+)
             if (e.target.classList.contains('btn-plus')) {
                 e.stopPropagation(); // Mencegah klik tembus
@@ -219,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 qtySpan.innerText = val + 1;
                 return; // Stop disini
             }
-            
+
             // B. Handle Tombol Minus (-)
             if (e.target.classList.contains('btn-minus')) {
                 e.stopPropagation();
@@ -236,11 +337,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const cartBtn = e.target.closest('.add-to-cart-btn');
             if (cartBtn) {
                 e.preventDefault();
-                
+
                 const name = cartBtn.getAttribute('data-name');
                 const price = cartBtn.getAttribute('data-price');
                 const image = cartBtn.getAttribute('data-image');
-                
+
                 // Ambil angka Qty dari elemen saudaranya
                 const cardActions = cartBtn.parentElement;
                 const qtySpan = cardActions.querySelector('.qty-val');
@@ -251,41 +352,41 @@ document.addEventListener("DOMContentLoaded", function () {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: name, price: price, qty: qtyVal, image: image })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        const badge = document.getElementById('cartBadge');
-                        if (badge) {
-                            // Ambil angka sekarang, tambah dengan qty baru
-                            let currentCount = parseInt(badge.innerText) || 0;
-                            let newCount = currentCount + parseInt(qtyVal);
-                            
-                            badge.innerText = newCount;
-                            badge.classList.remove('hidden'); // Munculkan jika tadinya sembunyi
-                        }
-                        // Reset Qty jadi 1 setelah berhasil
-                    //qtySpan.innerText = "1";
-                        
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Berhasil masuk keranjang.',
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Gagal',
-                            text: data.message,
-                            confirmButtonColor: '#89CFF0'
-                        }).then(() => {
-                            if(data.message.includes('login') && modal) {
-                                modal.style.display = "flex";
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const badge = document.getElementById('cartBadge');
+                            if (badge) {
+                                // Ambil angka sekarang, tambah dengan qty baru
+                                let currentCount = parseInt(badge.innerText) || 0;
+                                let newCount = currentCount + parseInt(qtyVal);
+
+                                badge.innerText = newCount;
+                                badge.classList.remove('hidden'); // Munculkan jika tadinya sembunyi
                             }
-                        });
-                    }
-                });
+                            // Reset Qty jadi 1 setelah berhasil
+                            //qtySpan.innerText = "1";
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Berhasil masuk keranjang.',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Gagal',
+                                text: data.message,
+                                confirmButtonColor: '#89CFF0'
+                            }).then(() => {
+                                if (data.message.includes('login') && modal) {
+                                    modal.style.display = "flex";
+                                }
+                            });
+                        }
+                    });
             }
         });
     }
@@ -306,7 +407,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let total = 0;
         let totalQty = 0;
         const items = document.querySelectorAll('.cart-item-card');
-        
+
         items.forEach(item => {
             const price = parseInt(item.getAttribute('data-price'));
             const qty = parseInt(item.querySelector('.cart-qty-val').innerText);
@@ -316,15 +417,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const subtotalEl = document.getElementById('cart-subtotal');
         const totalQtyEl = document.getElementById('cart-total-qty');
-        
-        if(subtotalEl) subtotalEl.innerText = formatRupiah(total).replace("Rp", "Rp ");
-        if(totalQtyEl) totalQtyEl.innerText = totalQty + " Pcs";
+
+        if (subtotalEl) subtotalEl.innerText = formatRupiah(total).replace("Rp", "Rp ");
+        if (totalQtyEl) totalQtyEl.innerText = totalQty + " Pcs";
 
         if (items.length === 0) setTimeout(() => location.reload(), 500);
     }
 
     if (cartContainer) {
-        cartContainer.addEventListener('click', function(e) {
+        cartContainer.addEventListener('click', function (e) {
             const target = e.target;
             const card = target.closest('.cart-item-card');
             if (!card) return;
@@ -356,56 +457,56 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // B. Tombol Hapus (Trash)
             // B. Tombol Hapus (Trash) - DIPERBAIKI
-if (target.closest('.cart-remove-btn') || target.classList.contains('cart-remove-btn')) {
-    const card = target.closest('.cart-item-card');
-    if (!card) return;
+            if (target.closest('.cart-remove-btn') || target.classList.contains('cart-remove-btn')) {
+                const card = target.closest('.cart-item-card');
+                if (!card) return;
 
-    const cartId = card.getAttribute('data-id');
+                const cartId = card.getAttribute('data-id');
 
-    Swal.fire({
-        title: 'Hapus item?',
-        text: "Item akan dihapus permanen dari keranjang.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch('index.php?action=remove_item', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cart_id: cartId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    card.style.transition = "all 0.4s ease";
-                    card.style.opacity = "0";
-                    card.style.transform = "translateX(50px)";
-                    setTimeout(() => {
-                        card.remove();
-                        recalculateCart();
-                        Swal.fire({
-                            title: 'Terhapus!',
-                            text: 'Item telah dihapus dari keranjang.',
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    }, 400);
-                } else {
-                    Swal.fire('Gagal', 'Tidak dapat menghapus item.', 'error');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
-            });
-        }
-    });
-}
+                Swal.fire({
+                    title: 'Hapus item?',
+                    text: "Item akan dihapus permanen dari keranjang.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('index.php?action=remove_item', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ cart_id: cartId })
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    card.style.transition = "all 0.4s ease";
+                                    card.style.opacity = "0";
+                                    card.style.transform = "translateX(50px)";
+                                    setTimeout(() => {
+                                        card.remove();
+                                        recalculateCart();
+                                        Swal.fire({
+                                            title: 'Terhapus!',
+                                            text: 'Item telah dihapus dari keranjang.',
+                                            icon: 'success',
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                    }, 400);
+                                } else {
+                                    Swal.fire('Gagal', 'Tidak dapat menghapus item.', 'error');
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+                            });
+                    }
+                });
+            }
         });
     }
 
@@ -438,18 +539,24 @@ if (target.closest('.cart-remove-btn') || target.classList.contains('cart-remove
     // ... (Kode sebelumnya tetap ada) ...
 
     // =========================================
-    // 11. INISIALISASI SWIPER JS (CAROUSEL)
+    // 11. SEARCH BAR FUNCTIONALITY (CLIENT SIDE) - REMOVED (Now Server Side)
+    // =========================================
+    // Search is now handled via GET request in index.php
+
+
+    // =========================================
+    // 12. INISIALISASI SWIPER JS (CAROUSEL)
     // =========================================
     // Cek apakah ada elemen swiper di halaman
-    
 
-if (document.querySelector('.product-swiper')) {
+
+    if (document.querySelector('.product-swiper')) {
         const swiper = new Swiper('.product-swiper', {
             // Pengaturan Dasar
             slidesPerView: 1, // Tampil 1 produk di HP
             spaceBetween: 30, // Jarak antar produk
             loop: true,       // INFINITE LOOP (Tanpa Duplikat Data)
-            
+
             // Animasi Bergerak Otomatis
             autoplay: {
                 delay: 2500, // Bergerak setiap 2.5 detik

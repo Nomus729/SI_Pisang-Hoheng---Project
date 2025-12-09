@@ -1,12 +1,14 @@
 <?php
 require_once 'config/Database.php';
 
-class AdminController {
+class AdminController
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         if (session_status() == PHP_SESSION_NONE) session_start();
-        
+
         // Cek Login Admin
         if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             header("Location: index.php");
@@ -16,7 +18,8 @@ class AdminController {
         $this->db = $database->getConnection();
     }
 
-    public function dashboard() {
+    public function dashboard()
+    {
         // --- 1. HANDLER AJAX (BARU: UNTUK PESANAN & NOTIFIKASI) ---
         if (isset($_GET['action_ajax'])) {
             if ($_GET['action_ajax'] == 'update_status') {
@@ -27,7 +30,7 @@ class AdminController {
                 $this->getDetailPesanan();
                 return;
             }
-            
+
             // --- TAMBAHAN BARU: CEK NOTIFIKASI ---
             if ($_GET['action_ajax'] == 'check_notif') {
                 $this->checkNewOrders();
@@ -49,12 +52,12 @@ class AdminController {
             case 'daftar_produk':
                 $data = $this->getProduk();
                 break;
-            
+
             case 'detail_produk':
                 $id = isset($_GET['id']) ? $_GET['id'] : null;
                 $data = $id ? $this->getProdukById($id) : null;
                 break;
-            
+
             case 'hapus_produk':
                 $id = isset($_GET['id']) ? $_GET['id'] : null;
                 if ($id) {
@@ -73,9 +76,13 @@ class AdminController {
             case 'laporan_keuangan':
                 $data = $this->getLaporanKeuangan();
                 break;
-            
+
             case 'laporan_produk':
                 $data = $this->getLaporanProduk();
+                break;
+
+            case 'log_activity':
+                $data = $this->getLogs();
                 break;
         }
 
@@ -85,16 +92,17 @@ class AdminController {
     // --- FUNGSI PESANAN (BARU) ---
     // --- FUNGSI PESANAN (DENGAN FILTER) ---
     // --- FUNGSI PESANAN (DENGAN FILTER) ---
-    private function getAllPesanan($status = 'all') {
+    private function getAllPesanan($status = 'all')
+    {
         $sql = "SELECT p.*, u.nama_user 
                 FROM pesanan p 
                 JOIN users u ON p.user_id = u.id";
-        
+
         // Jika status bukan 'all', tambahkan kondisi WHERE
         if ($status != 'all') {
             $sql .= " WHERE p.status = :status";
         }
-        
+
         $sql .= " ORDER BY p.tanggal DESC"; // Selalu urutkan dari yang terbaru
 
         $stmt = $this->db->prepare($sql);
@@ -108,9 +116,10 @@ class AdminController {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    private function getDetailPesanan() {
+    private function getDetailPesanan()
+    {
         $id = $_GET['id'];
-        
+
         $sqlOrder = "SELECT p.*, u.nama_user, u.email 
                      FROM pesanan p 
                      JOIN users u ON p.user_id = u.id 
@@ -134,7 +143,8 @@ class AdminController {
     // --- REVISI: UPDATE STATUS & JUMLAH TERJUAL ---
     // --- REVISI 2: LOGIKA STOK & TERJUAL ---
     // --- REVISI: UPDATE STATUS + CATATAN TOLAK ---
-    private function updateStatusPesanan() {
+    private function updateStatusPesanan()
+    {
         $input = json_decode(file_get_contents('php://input'), true);
         $id = $input['id'];
         $status = $input['status'];
@@ -168,8 +178,7 @@ class AdminController {
                     $stmtUpdate->bindParam(':name', $item['product_name']);
                     $stmtUpdate->execute();
                 }
-            }
-            elseif ($status === 'batal') {
+            } elseif ($status === 'batal') {
                 // Kembalikan Stok (Restock)
                 $sqlRestock = "UPDATE produk SET stok = stok + :qty WHERE nama_produk = :name";
                 $stmtRestock = $this->db->prepare($sqlRestock);
@@ -183,7 +192,6 @@ class AdminController {
             $this->db->commit();
             header('Content-Type: application/json');
             echo json_encode(['status' => 'success']);
-
         } catch (Exception $e) {
             $this->db->rollBack();
             header('Content-Type: application/json');
@@ -193,14 +201,15 @@ class AdminController {
     }
 
     // --- FUNGSI CEK PESANAN BARU (REALTIME) ---
-    private function checkNewOrders() {
+    private function checkNewOrders()
+    {
         // Ambil pesanan yang statusnya masih 'pending'
         $sql = "SELECT p.id, p.total_harga, u.nama_user 
                 FROM pesanan p
                 JOIN users u ON p.user_id = u.id
                 WHERE p.status = 'pending' 
                 ORDER BY p.tanggal DESC";
-        
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -217,20 +226,21 @@ class AdminController {
     }
 
     // --- FUNGSI PRODUK (LAMA) ---
-    private function simpanProduk() {
+    private function simpanProduk()
+    {
         $id = isset($_POST['id']) ? $_POST['id'] : null;
         $kode = $_POST['kode'];
         $nama = $_POST['nama'];
         $harga = $_POST['harga'];
         $stok = $_POST['stok'];
         $detail = $_POST['detail'];
-        
+
         if (empty($nama) || empty($harga) || empty($stok)) {
             echo "<script>alert('Data tidak boleh kosong!'); history.back();</script>";
             return;
         }
 
-        $gambarQuery = ""; 
+        $gambarQuery = "";
         $params = [
             ':kode' => $kode,
             ':nama' => $nama,
@@ -262,7 +272,7 @@ class AdminController {
         }
 
         $stmt = $this->db->prepare($sql);
-        
+
         if ($stmt->execute($params)) {
             $_SESSION['flash_icon'] = 'success';
             $_SESSION['flash_title'] = 'Berhasil!';
@@ -276,7 +286,8 @@ class AdminController {
         }
     }
 
-    private function hapusProduk($id) {
+    private function hapusProduk($id)
+    {
         $stmtCheck = $this->db->prepare("SELECT gambar FROM produk WHERE id = :id");
         $stmtCheck->bindParam(':id', $id);
         $stmtCheck->execute();
@@ -284,7 +295,7 @@ class AdminController {
 
         $stmt = $this->db->prepare("DELETE FROM produk WHERE id = :id");
         $stmt->bindParam(':id', $id);
-        
+
         if ($stmt->execute()) {
             if ($produk && $produk['gambar'] !== 'default.png') {
                 $filePath = "uploads/" . $produk['gambar'];
@@ -302,19 +313,22 @@ class AdminController {
         exit;
     }
 
-    private function getProduk() {
+    private function getProduk()
+    {
         $stmt = $this->db->query("SELECT * FROM produk ORDER BY created_at DESC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    private function getProdukById($id) {
+    private function getProdukById($id)
+    {
         $stmt = $this->db->prepare("SELECT * FROM produk WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    private function getLaporanKeuangan() {
+    private function getLaporanKeuangan()
+    {
         return [
             'pendapatan' => [1500000, 2300000, 1800000, 3200000],
             'pengeluaran' => [500000, 800000, 600000, 1200000],
@@ -322,13 +336,72 @@ class AdminController {
         ];
     }
 
-    private function getLaporanProduk() {
-        try {
-            $stmt = $this->db->query("SELECT nama_produk, terjual FROM produk ORDER BY terjual DESC LIMIT 5");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            return [];
+    private function getLaporanProduk()
+    {
+        $bulan = isset($_GET['bulan']) ? $_GET['bulan'] : date('m');
+        $tahun = isset($_GET['tahun']) ? $_GET['tahun'] : date('Y');
+
+        // 1. Top Produk (Berdasarkan Filter)
+        $sqlTop = "SELECT dp.product_name, SUM(dp.qty) as total_qty 
+                   FROM detail_pesanan dp
+                   JOIN pesanan p ON dp.pesanan_id = p.id
+                   WHERE p.status = 'selesai' 
+                   AND MONTH(p.tanggal) = :bulan AND YEAR(p.tanggal) = :tahun
+                   GROUP BY dp.product_name 
+                   ORDER BY total_qty DESC 
+                   LIMIT 5";
+        $stmtTop = $this->db->prepare($sqlTop);
+        $stmtTop->bindParam(':bulan', $bulan);
+        $stmtTop->bindParam(':tahun', $tahun);
+        $stmtTop->execute();
+        $topProducts = $stmtTop->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Data Grafik Harian (Sales Trend)
+        $sqlChart = "SELECT DATE(p.tanggal) as tgl, SUM(dp.qty) as total_qty
+                     FROM pesanan p
+                     JOIN detail_pesanan dp ON p.id = dp.pesanan_id
+                     WHERE p.status = 'selesai'
+                     AND MONTH(p.tanggal) = :bulan AND YEAR(p.tanggal) = :tahun
+                     GROUP BY DATE(p.tanggal)
+                     ORDER BY tgl ASC";
+        $stmtChart = $this->db->prepare($sqlChart);
+        $stmtChart->bindParam(':bulan', $bulan);
+        $stmtChart->bindParam(':tahun', $tahun);
+        $stmtChart->execute();
+        $chartDataRaw = $stmtChart->fetchAll(PDO::FETCH_KEY_PAIR); // [ '2023-12-01' => 10, ... ]
+
+        // Isi kekosongan tanggal agar grafik bagus
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
+        $labels = [];
+        $dataSeries = [];
+
+        for ($i = 1; $i <= $daysInMonth; $i++) {
+            $date = sprintf("%04d-%02d-%02d", $tahun, $bulan, $i);
+            $labels[] = $i; // Tanggal saja
+            $dataSeries[] = isset($chartDataRaw[$date]) ? $chartDataRaw[$date] : 0;
         }
+
+        // 3. Ringkasan Total
+        $totalTerjual = array_sum($dataSeries);
+
+        // Produk Stok Menipis (Global, tidak terpengaruh filter tanggal)
+        $stmtLow = $this->db->query("SELECT COUNT(*) FROM produk WHERE stok < 10");
+        $lowStockCount = $stmtLow->fetchColumn();
+
+        return [
+            'top_products' => $topProducts,
+            'chart_labels' => $labels,
+            'chart_data' => $dataSeries,
+            'total_terjual' => $totalTerjual,
+            'low_stock' => $lowStockCount,
+            'selected_bulan' => $bulan,
+            'selected_tahun' => $tahun
+        ];
+    }
+    private function getLogs()
+    {
+        require_once 'models/Log.php';
+        $log = new Log($this->db);
+        return $log->getAll();
     }
 }
-?>

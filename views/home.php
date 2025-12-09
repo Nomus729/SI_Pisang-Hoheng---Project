@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 </head>
+
 <body>
     <?php include 'views/components/header.php'; ?>
 
@@ -46,7 +48,7 @@
         <section id="menu" class="menu-section reveal-on-scroll">
             <h2>Daftar Menu</h2>
             <div class="menu-grid">
-                <?php foreach($data['menu_items'] as $item): ?>
+                <?php foreach ($data['menu_items'] as $item): ?>
                     <div class="menu-card">
                         <div class="card-img">
                             <img src="uploads/<?= $item['gambar'] ?>" alt="<?= $item['nama_produk'] ?>" onerror="this.src='https://placehold.co/200x150'">
@@ -63,10 +65,10 @@
                                     <span class="qty-val">1</span>
                                     <button class="btn-qty btn-plus">+</button>
                                 </div>
-                                <button class="cart-btn add-to-cart-btn" 
-                                        data-name="<?= $item['nama_produk'] ?>" 
-                                        data-price="<?= $item['harga'] ?>" 
-                                        data-image="uploads/<?= $item['gambar'] ?>">
+                                <button class="cart-btn add-to-cart-btn"
+                                    data-name="<?= $item['nama_produk'] ?>"
+                                    data-price="<?= $item['harga'] ?>"
+                                    data-image="uploads/<?= $item['gambar'] ?>">
                                     <i class="fas fa-shopping-cart"></i>
                                 </button>
                             </div>
@@ -75,8 +77,13 @@
                 <?php endforeach; ?>
             </div>
             <div class="pagination-container">
-                <?php for($i = 1; $i <= $data['pagination']['total_pages']; $i++): ?>
-                    <a href="index.php?halaman=<?= $i ?>#menu" class="page-link <?= ($i == $data['pagination']['current_page']) ? 'active' : '' ?>">
+                <?php for ($i = 1; $i <= $data['pagination']['total_pages']; $i++): ?>
+                    <?php
+                    $searchParam = isset($data['pagination']['search_query']) && !empty($data['pagination']['search_query'])
+                        ? '&search=' . urlencode($data['pagination']['search_query'])
+                        : '';
+                    ?>
+                    <a href="index.php?halaman=<?= $i ?><?= $searchParam ?>#menu" class="page-link <?= ($i == $data['pagination']['current_page']) ? 'active' : '' ?>">
                         <?= $i ?>
                     </a>
                 <?php endfor; ?>
@@ -87,7 +94,7 @@
             <h2>Produk Lainnya</h2>
             <div class="swiper product-swiper">
                 <div class="swiper-wrapper">
-                    <?php foreach($data['all_products'] as $prod): ?>
+                    <?php foreach ($data['all_products'] as $prod): ?>
                         <div class="swiper-slide">
                             <div class="prod-card-fixed">
                                 <div class="prod-circle-img">
@@ -95,11 +102,24 @@
                                 </div>
                                 <div class="prod-card-content">
                                     <h3><?= $prod['nama_produk'] ?></h3>
-                                    
-                                    <div class="prod-details text-truncate-multiline">
-                                        <?= $prod['deskripsi'] ?>
+
+                                    <div class="prod-details">
+                                        <ul>
+                                            <?php
+                                            // Pecah deskripsi berdasarkan tanda "-" atau baris baru
+                                            $lines = preg_split('/[-\n]/', $prod['deskripsi']);
+                                            foreach ($lines as $line):
+                                                $line = trim($line);
+                                                if (!empty($line)):
+                                            ?>
+                                                    <li><?= $line ?></li>
+                                            <?php
+                                                endif;
+                                            endforeach;
+                                            ?>
+                                        </ul>
                                     </div>
-                                    
+
                                     <span class="prod-price">Price : Rp. <?= number_format($prod['harga'], 0, ',', '.') ?></span>
                                 </div>
                             </div>
@@ -114,7 +134,7 @@
     <div class="modal-overlay" id="authModal">
         <div class="modal-container">
             <button class="close-modal">&times;</button>
-            
+
             <div class="form-box login-box" id="loginForm">
                 <h2>Welcome!</h2>
                 <p class="subtitle">Welcome back!, Please enter your details</p>
@@ -173,22 +193,26 @@
         </div>
     </div>
 
-    <?php if(isset($_SESSION['flash_icon'])): ?>
-        <div id="flash-data" 
-             data-icon="<?= $_SESSION['flash_icon'] ?>" 
-             data-title="<?= $_SESSION['flash_title'] ?>" 
-             data-text="<?= $_SESSION['flash_text'] ?>"
-             data-modal="<?= isset($_SESSION['keep_modal']) ? $_SESSION['keep_modal'] : '' ?>">
+    <?php if (isset($_SESSION['flash_icon'])): ?>
+        <div id="flash-data"
+            data-icon="<?= $_SESSION['flash_icon'] ?>"
+            data-title="<?= $_SESSION['flash_title'] ?>"
+            data-text="<?= $_SESSION['flash_text'] ?>"
+            data-modal="<?= isset($_SESSION['keep_modal']) ? $_SESSION['keep_modal'] : '' ?>">
         </div>
-        <?php 
-            unset($_SESSION['flash_icon']);
-            unset($_SESSION['flash_title']);
-            unset($_SESSION['flash_text']);
-            unset($_SESSION['keep_modal']);
+        <?php
+        unset($_SESSION['flash_icon']);
+        unset($_SESSION['flash_title']);
+        unset($_SESSION['flash_text']);
+        unset($_SESSION['keep_modal']);
         ?>
     <?php endif; ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script src="public/js/script.js"></script> 
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="public/js/script.js"></script>
 </body>
+
 </html>

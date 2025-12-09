@@ -1,3 +1,148 @@
+// =========================================
+// GLOBAL FUNCTIONS (Action Buttons)
+// These functions are called directly from HTML elements (e.g., onclick)
+// and therefore must be globally accessible, outside of DOMContentLoaded.
+// =========================================
+
+// A. Lihat Detail Pesanan (Modal)
+function viewDetail(orderId) {
+    const modal = document.getElementById('detailModalAdmin');
+
+    // Tampilkan Loading dulu
+    Swal.fire({ title: 'Memuat Data...', didOpen: () => Swal.showLoading() });
+
+    // Ambil data dari server
+    fetch(`index.php?action=dashboard&action_ajax=get_detail&id=${orderId}`)
+        .then(res => res.json())
+        .then(data => {
+            Swal.close(); // Tutup loading
+
+            const order = data.order;
+            const items = data.items;
+
+            // Isi Data ke Modal
+            document.getElementById('modalKode').innerText = '#' + order.kode_pesanan;
+            document.getElementById('modalNama').innerText = order.nama_user;
+            document.getElementById('modalTanggal').innerText = order.tanggal;
+
+            // Format Status Badge
+            const badgeClass = `status - ${order.status} `;
+            document.getElementById('modalStatus').innerHTML = `<span class="status-badge ${badgeClass}">${order.status.toUpperCase()}</span>`;
+
+            document.getElementById('modalMetode').innerText = order.metode_bayar.toUpperCase() + ' - ' + order.metode_kirim.toUpperCase();
+            document.getElementById('modalTotal').innerText = 'Rp ' + parseInt(order.total_harga).toLocaleString('id-ID');
+
+            // Alamat (Tampilkan jika delivery)
+            const alamatBox = document.getElementById('modalAlamatBox');
+            if (order.metode_kirim === 'delivery') {
+                alamatBox.style.display = 'block';
+                document.getElementById('modalAlamat').innerText = order.alamat_kirim;
+            } else {
+                alamatBox.style.display = 'none';
+            }
+
+            const catatanText = order.catatan ? order.catatan : "Tidak ada catatan";
+            document.getElementById('modalCatatan').innerText = catatanText;
+
+            // Loop Barang Belanjaan
+            let htmlItems = '';
+            items.forEach(item => {
+                htmlItems += `
+                    <tr>
+                        <td>
+                            <b>${item.product_name}</b><br>
+                        </td>
+                        <td class="text-center">${item.qty}</td>
+                        <td class="text-right">Rp ${parseInt(item.subtotal).toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('modalItems').innerHTML = htmlItems;
+
+            // Buka Modal
+            modal.style.display = 'flex';
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Error', 'Gagal memuat detail pesanan.', 'error');
+        });
+}
+
+// B. Update Status Pesanan (Terima / Tolak / Selesai)
+// B. Update Status Pesanan (Revisi: Input Alasan Tolak)
+function updateStatus(orderId, newStatus) {
+
+    // 1. JIKA STATUS TOLAK (BATAL) -> MUNCULKAN INPUT
+    if (newStatus === 'batal') {
+        Swal.fire({
+            title: 'Tolak Pesanan?',
+            input: 'textarea',
+            inputLabel: 'Berikan alasan penolakan untuk pembeli:',
+            inputPlaceholder: 'Contoh: Stok habis, Alamat diluar jangkauan...',
+            inputAttributes: {
+                'aria-label': 'Tulis alasan penolakan'
+            },
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Tolak Pesanan',
+            cancelButtonText: 'Batal',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Anda harus menuliskan alasan penolakan!'
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Kirim dengan Alasan
+                kirimStatusKeServer(orderId, newStatus, result.value);
+            }
+        });
+    }
+
+    // 2. JIKA STATUS LAIN (PROSES/SELESAI) -> KONFIRMASI BIASA
+    else {
+        let confirmText = "Lanjutkan proses?";
+        let btnColor = "#007bff";
+
+        if (newStatus === 'proses') { confirmText = "Proses pesanan ini?"; btnColor = "#28a745"; }
+        else if (newStatus === 'selesai') { confirmText = "Selesaikan pesanan?"; }
+
+        Swal.fire({
+            title: 'Konfirmasi',
+            text: confirmText,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: btnColor,
+            confirmButtonText: 'Ya'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                kirimStatusKeServer(orderId, newStatus, null);
+            }
+        });
+    }
+}
+
+// Fungsi Helper untuk Fetch
+function kirimStatusKeServer(id, status, reason) {
+    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+
+    fetch('index.php?action=dashboard&action_ajax=update_status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, status: status, reason: reason })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                Swal.fire('Berhasil', '', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Gagal', 'Terjadi kesalahan server.', 'error');
+            }
+        });
+}
+
+
 document.addEventListener("DOMContentLoaded", function () {
     const notifBtn = document.getElementById('notifBtn');
     const notifDropdown = document.getElementById('notifDropdown');
@@ -8,13 +153,55 @@ document.addEventListener("DOMContentLoaded", function () {
     // Variabel untuk melacak jumlah notif sebelumnya (agar suara tidak bunyi terus)
     let previousCount = 0;
 
-    // 1. Toggle Dropdown Notifikasi
+    // 1. Toggle Dropdown Notifikasi & Sidebar
     if (notifBtn) {
         notifBtn.addEventListener('click', () => {
             notifDropdown.classList.toggle('hidden');
-            // Saat dibuka, jangan sembunyikan badge, biarkan admin melihat jumlahnya
-            // notifCount.classList.add('hidden'); 
         });
+    }
+
+    // --- SIDEBAR TOGGLE ---
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+
+    // Cek Sidebar Init State (dari inline script di head)
+    if (document.documentElement.classList.contains('sidebar-init-collapsed')) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('expanded');
+
+        // Hapus class init setelah render selesai agar transisi aktif kembali
+        setTimeout(() => {
+            document.documentElement.classList.remove('sidebar-init-collapsed');
+        }, 50);
+    }
+    // Fallback jika inline script gagal (opsional)
+    else if (localStorage.getItem('sidebar-collapsed') === 'true') {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('expanded');
+    }
+
+    if (sidebarToggle) {
+        console.log("Desktop sidebar toggle initialized");
+        sidebarToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log("Desktop sidebar toggle clicked");
+
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+                // Force remove mobile styles if any
+                sidebar.classList.remove('mobile-active');
+            }
+            if (mainContent) mainContent.classList.toggle('expanded');
+
+            // Simpan state
+            if (sidebar) {
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                localStorage.setItem('sidebar-collapsed', isCollapsed);
+            }
+        });
+    } else {
+        console.error("Desktop sidebar toggle BUTTON NOT FOUND");
     }
 
     // 2. FUNGSI CEK ORDER DARI DATABASE (Realtime Polling)
@@ -36,10 +223,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Cek apakah ada pesanan baru masuk? (Jika jumlah bertambah)
                 if (count > previousCount) {
                     // Mainkan Suara "Ting!"
-                    if(sound) {
+                    if (sound) {
                         sound.play().catch(error => console.log('Audio dicegah browser, perlu interaksi user.'));
                     }
-                    
+
                     // Tampilkan SweetAlert Kecil (Toast) di pojok
                     const Toast = Swal.mixin({
                         toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true
@@ -50,13 +237,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Update isi Dropdown
                 if (count > 0) {
                     notifList.innerHTML = ''; // Bersihkan list lama
-                    
+
                     orders.forEach(order => {
                         const item = document.createElement('div');
                         item.className = 'notif-item';
                         // Format Rupiah
                         let harga = new Intl.NumberFormat('id-ID').format(order.total_harga);
-                        
+
                         item.innerHTML = `
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
@@ -102,154 +289,58 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmButtonText: 'Oke Siap!'
         });
     }
-    
-});
 
-// =========================================
-// 4. MANAJEMEN PESANAN (AKSI ADMIN)
-// =========================================
-
-// A. Lihat Detail Pesanan (Modal)
-function viewDetail(orderId) {
-    const modal = document.getElementById('detailModalAdmin');
-    
-    // Tampilkan Loading dulu
-    Swal.fire({ title: 'Memuat Data...', didOpen: () => Swal.showLoading() });
-
-    // Ambil data dari server
-    fetch(`index.php?action=dashboard&action_ajax=get_detail&id=${orderId}`)
-        .then(res => res.json())
-        .then(data => {
-            Swal.close(); // Tutup loading
-            
-            const order = data.order;
-            const items = data.items;
-
-            // Isi Data ke Modal
-            document.getElementById('modalKode').innerText = '#' + order.kode_pesanan;
-            document.getElementById('modalNama').innerText = order.nama_user;
-            document.getElementById('modalTanggal').innerText = order.tanggal;
-            
-            // Format Status Badge
-            const badgeClass = `status-${order.status}`;
-            document.getElementById('modalStatus').innerHTML = `<span class="status-badge ${badgeClass}">${order.status.toUpperCase()}</span>`;
-            
-            document.getElementById('modalMetode').innerText = order.metode_bayar.toUpperCase() + ' - ' + order.metode_kirim.toUpperCase();
-            document.getElementById('modalTotal').innerText = 'Rp ' + parseInt(order.total_harga).toLocaleString('id-ID');
-
-            // Alamat (Tampilkan jika delivery)
-            const alamatBox = document.getElementById('modalAlamatBox');
-            if(order.metode_kirim === 'delivery') {
-                alamatBox.style.display = 'block';
-                document.getElementById('modalAlamat').innerText = order.alamat_kirim;
-            } else {
-                alamatBox.style.display = 'none';
-            }
-
-            const catatanText = order.catatan ? order.catatan : "Tidak ada catatan";
-            document.getElementById('modalCatatan').innerText = catatanText;
-
-            // Loop Barang Belanjaan
-            let htmlItems = '';
-            items.forEach(item => {
-                htmlItems += `
-                    <tr>
-                        <td>
-                            <b>${item.product_name}</b><br>
-                        </td>
-                        <td class="text-center">${item.qty}</td>
-                        <td class="text-right">Rp ${parseInt(item.subtotal).toLocaleString('id-ID')}</td>
-                    </tr>
-                `;
-            });
-            document.getElementById('modalItems').innerHTML = htmlItems;
-
-            // Buka Modal
-            modal.style.display = 'flex';
-        })
-        .catch(err => {
-            console.error(err);
-            Swal.fire('Error', 'Gagal memuat detail pesanan.', 'error');
+    // Tutup Modal Detail saat tombol X diklik
+    document.querySelectorAll('.close-modal-admin').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('detailModalAdmin').style.display = 'none';
         });
-}
+    });
 
-// B. Update Status Pesanan (Terima / Tolak / Selesai)
-// B. Update Status Pesanan (Revisi: Input Alasan Tolak)
-function updateStatus(orderId, newStatus) {
-    
-    // 1. JIKA STATUS TOLAK (BATAL) -> MUNCULKAN INPUT
-    if (newStatus === 'batal') {
-        Swal.fire({
-            title: 'Tolak Pesanan?',
-            input: 'textarea',
-            inputLabel: 'Berikan alasan penolakan untuk pembeli:',
-            inputPlaceholder: 'Contoh: Stok habis, Alamat diluar jangkauan...',
-            inputAttributes: {
-                'aria-label': 'Tulis alasan penolakan'
-            },
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Tolak Pesanan',
-            cancelButtonText: 'Batal',
-            inputValidator: (value) => {
-                if (!value) {
-                    return 'Anda harus menuliskan alasan penolakan!'
-                }
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Kirim dengan Alasan
-                kirimStatusKeServer(orderId, newStatus, result.value);
-            }
+    // =========================================
+    // MOBILE SIDEBAR LOGIC (NEW & CONSOLIDATED)
+    // =========================================
+    const mobileToggle = document.getElementById('mobileSidebarToggle');
+    // Re-select sidebar (already defined above as const sidebar, reusing it)
+
+    // Create Overlay dynamically if it doesn't exist
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+    }
+
+    if (mobileToggle) {
+        console.log("Mobile toggle initialized");
+        mobileToggle.addEventListener('click', (e) => {
+            console.log("Mobile toggle clicked");
+            e.stopPropagation();
+            e.preventDefault(); // Prevent default button behavior
+            sidebar.classList.toggle('mobile-active');
+            overlay.classList.toggle('active');
         });
-    } 
-    
-    // 2. JIKA STATUS LAIN (PROSES/SELESAI) -> KONFIRMASI BIASA
-    else {
-        let confirmText = "Lanjutkan proses?";
-        let btnColor = "#007bff";
-        
-        if (newStatus === 'proses') { confirmText = "Proses pesanan ini?"; btnColor = "#28a745"; }
-        else if (newStatus === 'selesai') { confirmText = "Selesaikan pesanan?"; }
+    } else {
+        console.warn("Mobile toggle NOT found");
+    }
 
-        Swal.fire({
-            title: 'Konfirmasi',
-            text: confirmText,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: btnColor,
-            confirmButtonText: 'Ya'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                kirimStatusKeServer(orderId, newStatus, null);
-            }
+    // Close on Overlay Click
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-active');
+            overlay.classList.remove('active');
         });
     }
-}
 
-// Fungsi Helper untuk Fetch
-function kirimStatusKeServer(id, status, reason) {
-    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+    // Close on Menu Item Click (Mobile)
+    if (window.innerWidth <= 900) {
+        const menuItems = document.querySelectorAll('.sidebar .menu-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-active');
+                overlay.classList.remove('active');
+            });
+        });
+    }
 
-    fetch('index.php?action=dashboard&action_ajax=update_status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id, status: status, reason: reason })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            Swal.fire('Berhasil', '', 'success').then(() => location.reload());
-        } else {
-            Swal.fire('Gagal', 'Terjadi kesalahan server.', 'error');
-        }
-    });
-}
-
-// Tutup Modal Detail saat tombol X diklik
-document.querySelectorAll('.close-modal-admin').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.getElementById('detailModalAdmin').style.display = 'none';
-    });
 });

@@ -1,94 +1,562 @@
 /* Layout & Sidebar */
-/* RESET SEBELUMNYA (YANG BIKIN GAK BISA SCROLL) */
-/* body.admin-body { overflow: hidden; }  <-- INI PENYEBABNYA */
-
-/* UPDATE BARU (FIX SCROLL) */
 body.admin-body {
     padding-top: 0;
     background-color: #f4f4f4;
-    overflow-y: auto; /* Izinkan scroll vertikal */
+    overflow-y: auto;
 }
 
 .admin-layout {
     display: flex;
-    min-height: 100vh; /* Gunakan min-height agar bisa memanjang */
-}
-
-/* Sidebar tetap fixed (diam) */
-.sidebar {
-    width: 260px;
-    background: #fff;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-    padding: 20px;
-    position: fixed; 
-    top: 0; left: 0; bottom: 0; /* Full tinggi layar */
-    overflow-y: auto; /* Sidebar bisa discroll jika menu banyak */
-    z-index: 100;
-}
-
-/* Main Content bisa scroll */
-.main-content {
-    margin-left: 260px; /* Geser konten ke kanan sidebar */
-    flex: 1;
-    padding: 20px;
-    width: calc(100% - 260px); /* Pastikan lebar pas */
     min-height: 100vh;
 }
 
+/* Sidebar Styling */
+.sidebar {
+    width: 260px;
+    background: #fff;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* FIX: Mencegah text bocor saat mengecil */
+    z-index: 100;
+    transition: width 0.3s ease;
+    /* Transisi Lebar */
+    white-space: nowrap;
+}
 
-.sidebar { width: 260px; background: #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.05); padding: 20px; position: fixed; height: 100%; }
-.sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
-.sidebar-header img { width: 40px; }
-.sidebar-header .brand { font-weight: 800; font-size: 1.1rem; }
+/* Header Sidebar */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Pisahkan Logo+Text dengan Tombol */
+    margin-bottom: 30px;
+    height: 50px;
+    /* Tinggi fix agar tidak lompat */
+}
 
-.menu-title { font-size: 0.8rem; color: #888; margin: 15px 0 5px 10px; font-weight: 600; text-transform: uppercase; }
-.menu-item { display: flex; align-items: center; gap: 10px; padding: 12px 15px; color: #555; text-decoration: none; border-radius: 10px; transition: 0.3s; }
-.menu-item:hover, .menu-item.active { background: #e3f2fd; color: #1976d2; font-weight: 600; }
+.sidebar-header img {
+    width: 40px;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar-header .text {
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    width: auto;
+    transition: opacity 0.2s ease;
+    /* Text hilang instan sebelum lebar */
+}
+
+.sidebar-header .brand {
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+
+.sidebar-header .sub {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+
+/* Tombol Toggle di Sidebar */
+.btn-toggle-sidebar {
+    background: transparent;
+    border: none;
+    font-size: 1.1rem;
+    color: #555;
+    cursor: pointer;
+    width: 40px;
+    /* Sedikit lebih besar */
+    height: 40px;
+    border-radius: 10px;
+    /* Kotak rounded agar modern */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    /* Jangan menyusut */
+}
+
+.btn-toggle-sidebar:hover {
+    background-color: #f0f2f5;
+    color: #1976d2;
+}
+
+
+/* --- COLLAPSED STATE (Saat ditutup) --- */
+.sidebar.collapsed,
+html.sidebar-init-collapsed .sidebar {
+    width: 80px;
+    padding: 20px 15px;
+    /* Padding kiri kanan dikit */
+}
+
+/* Fix Flicker: Disable transitions on load */
+html.sidebar-init-collapsed .sidebar,
+html.sidebar-init-collapsed .main-content,
+html.sidebar-init-collapsed .sidebar *,
+html.sidebar-init-collapsed .main-content * {
+    transition: none !important;
+}
+
+/* Text Container */
+.sidebar-header .text {
+    opacity: 1;
+    width: auto;
+    transition: opacity 0.2s ease;
+    /* Text hilang instan sebelum lebar */
+}
+
+.sidebar.collapsed .sidebar-header .text,
+html.sidebar-init-collapsed .sidebar-header .text {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    margin: 0;
+}
+
+/* Logo Image */
+.sidebar-header img {
+    width: 40px;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar.collapsed .sidebar-header img,
+html.sidebar-init-collapsed .sidebar-header img {
+    opacity: 0;
+    width: 0;
+    margin: 0;
+    display: none;
+    /* Pastikan benar2 hilang */
+}
+
+/* Tombol Toggle saat Collapsed */
+.sidebar.collapsed .btn-toggle-sidebar,
+html.sidebar-init-collapsed .btn-toggle-sidebar {
+    margin: 0 auto;
+    width: 50px;
+    /* Lebih besar saat sendiri */
+    height: 50px;
+    background: #e3f2fd;
+    /* Highlight background */
+    color: #1976d2;
+    border-radius: 15px;
+}
+
+/* Menu Title */
+.menu-title {
+    font-size: 0.8rem;
+    color: #888;
+    margin: 15px 0 5px 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+    opacity: 1;
+}
+
+.sidebar.collapsed .menu-title,
+html.sidebar-init-collapsed .menu-title {
+    opacity: 0;
+    height: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* Menu Item Link */
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    /* Jarak icon dan text */
+    padding: 12px 15px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    min-height: 48px;
+    /* Pastikan tinggi konsisten */
+}
+
+/* Span Text di Menu - Smooth Hide */
+.menu-item span {
+    opacity: 1;
+    max-width: 200px;
+    /* Cukup lebar untuk text */
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.sidebar.collapsed .menu-item span,
+html.sidebar-init-collapsed .menu-item span {
+    opacity: 0;
+    max-width: 0;
+    margin-left: 0;
+    /* Pastikan tidak ada margin sisa */
+}
+
+/* Menu Title - Smooth Hide */
+.menu-title span {
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.sidebar.collapsed .menu-title span,
+html.sidebar-init-collapsed .menu-title span {
+    opacity: 0;
+    display: none;
+}
+
+/* Icon Menu */
+.menu-item i {
+    width: 24px;
+    text-align: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: margin 0.3s;
+}
+
+/* Collapsed Menu Item */
+.sidebar.collapsed .menu-item,
+html.sidebar-init-collapsed .menu-item {
+    justify-content: center;
+    padding: 12px 10px;
+    gap: 0;
+    /* Hilangkan gap saat collapsed */
+}
+
+.sidebar.collapsed .menu-item i,
+html.sidebar-init-collapsed .menu-item i {
+    font-size: 1.3rem;
+    margin: 0;
+}
+
 
 /* Main Content */
-.main-content { margin-left: 260px; flex: 1; padding: 20px; }
-.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: #fff; padding: 15px 30px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-.header-right { display: flex; align-items: center; gap: 20px; }
-
-/* Notifikasi Lonceng */
-.notif-wrapper { position: relative; cursor: pointer; }
-.notif-wrapper i { font-size: 1.2rem; color: #555; }
-.notif-badge { position: absolute; top: -5px; right: -5px; background: #ff4d4d; color: white; font-size: 0.7rem; padding: 2px 5px; border-radius: 50%; }
-.notif-dropdown { position: absolute; top: 40px; right: 0; width: 250px; background: #fff; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 100; overflow: hidden; }
-.notif-header { padding: 10px; background: #f8f9fa; font-weight: bold; border-bottom: 1px solid #eee; }
-.notif-body { padding: 10px; max-height: 200px; overflow-y: auto; }
-.notif-item { padding: 8px; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; }
-.notif-item:hover { background: #f9f9f9; }
-
-/* Card & Table Style */
-.card-box { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-bottom: 20px; }
-.table-custom { width: 100%; border-collapse: collapse; margin-top: 15px; }
-.table-custom th { text-align: left; padding: 12px; background: #f8f9fa; color: #666; font-weight: 600; }
-.table-custom td { padding: 12px; border-bottom: 1px solid #eee; }
-.btn-action { padding: 5px 10px; border-radius: 5px; color: #fff; text-decoration: none; font-size: 0.8rem; margin-right: 5px; }
-.btn-edit { background: #ffc107; }
-.btn-delete { background: #ff4d4d; }
-
-/* Form Style */
-.form-group { margin-bottom: 15px; }
-.form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-/* --- STATUS BADGES --- */
-.status-badge {
-    padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.5px;
+.main-content {
+    margin-left: 260px;
+    flex: 1;
+    padding: 20px;
+    width: calc(100% - 260px);
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    /* Sync dengan sidebar */
 }
-.status-pending { background: #fff3cd; color: #856404; } /* Kuning */
-.status-proses  { background: #cce5ff; color: #004085; } /* Biru */
-.status-selesai { background: #d4edda; color: #155724; } /* Hijau */
-.status-batal   { background: #f8d7da; color: #721c24; } /* Merah */
 
-/* --- TOMBOL AKSI BARU --- */
-.btn-info { background: #17a2b8; }
-.btn-success { background: #28a745; }
-.btn-primary { background: #007bff; }
-.btn-danger { background: #dc3545; }
+/* Hover & Active States */
+.menu-item:hover {
+    background-color: #f8f9fa;
+    color: #1976d2;
+    transform: translateX(5px);
+}
+
+.menu-item.active {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 #1976d2;
+    /* Indikator garis kiri */
+}
+
+.menu-item.active i {
+    color: #1976d2;
+}
+
+/* Collapsed Active State */
+.sidebar.collapsed .menu-item:hover,
+html.sidebar-init-collapsed .menu-item:hover {
+    transform: none;
+    /* Disable shift on collapsed */
+    background-color: #f8f9fa;
+}
+
+.sidebar.collapsed .menu-item.active,
+html.sidebar-init-collapsed .menu-item.active {
+    background-color: #e3f2fd;
+    box-shadow: none;
+    /* Hilangkan garis kiri saat collapsed */
+    position: relative;
+    border-radius: 12px;
+}
+
+/* Active Icon Animation (Collapsed) */
+.sidebar.collapsed .menu-item.active i,
+html.sidebar-init-collapsed .menu-item.active i {
+    animation: pulseIcon 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseIcon {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Tooltip for Collapsed Menu */
+.sidebar.collapsed .menu-item,
+html.sidebar-init-collapsed .menu-item {
+    position: relative;
+    overflow: visible;
+    /* Allow tooltip to show outside */
+}
+
+.sidebar.collapsed .menu-item:hover::after,
+html.sidebar-init-collapsed .menu-item:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    margin-left: 10px;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeInTooltip 0.2s forwards;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar.collapsed .menu-item:hover::before,
+html.sidebar-init-collapsed .menu-item:hover::before {
+    /* Arrow for tooltip */
+    content: "";
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent #333 transparent transparent;
+    margin-left: 0px;
+    z-index: 200;
+    opacity: 0;
+    animation: fadeInTooltip 0.2s forwards;
+}
+
+@keyframes fadeInTooltip {
+    to {
+        opacity: 1;
+    }
+}
+
+
+.main-content.expanded,
+html.sidebar-init-collapsed .main-content {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    background: #fff;
+    padding: 15px 30px;
+    border-radius: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+
+/* Existing Styles (Keep them) */
+.notif-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.notif-wrapper i {
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.notif-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4d4d;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    border-radius: 50%;
+}
+
+.notif-dropdown {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 250px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    overflow: hidden;
+}
+
+.notif-header {
+    padding: 10px;
+    background: #f8f9fa;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+}
+
+.notif-body {
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.notif-item {
+    padding: 8px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+}
+
+.notif-item:hover {
+    background: #f9f9f9;
+}
+
+.card-box {
+    background: #fff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    margin-bottom: 20px;
+}
+
+.table-custom {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.table-custom th {
+    text-align: left;
+    padding: 12px;
+    background: #f8f9fa;
+    color: #666;
+    font-weight: 600;
+}
+
+.table-custom td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.btn-action {
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+.btn-edit {
+    background: #ffc107;
+}
+
+.btn-delete {
+    background: #ff4d4d;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-proses {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-selesai {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-batal {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.btn-info {
+    background: #17a2b8;
+}
+
+.btn-success {
+    background: #28a745;
+}
+
+.btn-primary {
+    background: #007bff;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
 
 .filter-bar {
     display: flex;
@@ -97,41 +565,307 @@ body.admin-body {
     flex-wrap: wrap;
 }
 
-/* --- FILTER BUTTONS --- */
 .btn-filter {
     display: inline-block;
     padding: 8px 24px;
-    border-radius: 50px; /* Bentuk Pill / Bulat */
-    border: 1px solid #e0e0e0; /* Border abu tipis */
-    background-color: #fff; /* Background putih */
-    
-    /* PENTING: Warna teks abu-abu agar tidak ungu/biru */
-    color: #666; 
-    
+    border-radius: 50px;
+    border: 1px solid #e0e0e0;
+    background-color: #fff;
+    color: #666;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
     transition: all 0.3s ease;
 }
 
-/* Efek saat Mouse Hover (Disorot) */
 .btn-filter:hover {
     border-color: #89CFF0;
-    color: #89CFF0; /* Teks jadi biru muda */
-    background-color: #f8fdff; /* Background agak kebiruan dikit */
+    color: #89CFF0;
+    background-color: #f8fdff;
 }
 
-/* Efek saat Aktif (Sedang Dipilih) */
 .btn-filter.active {
-    background-color: #89CFF0; /* Background Biru Tema */
-    color: #fff; /* Teks Putih */
+    background-color: #89CFF0;
+    color: #fff;
     border-color: #89CFF0;
-    box-shadow: 0 4px 10px rgba(137, 207, 240, 0.4); /* Bayangan Biru Halus */
+    box-shadow: 0 4px 10px rgba(137, 207, 240, 0.4);
 }
 
-/* --- BADGE SIDEBAR --- */
 .badge-mini {
-    background: #ff4d4d; color: white; font-size: 0.6rem;
-    padding: 2px 6px; border-radius: 10px; margin-left: auto;
+    background: #ff4d4d;
+    color: white;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: auto;
 }
 
+/* --- MOBILE RESPONSIVE --- */
+
+/* Default hide mobile toggle */
+.btn-mobile-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+    backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 900px) {
+
+    /* --- 1. LAYOUT RESET --- */
+    .admin-layout {
+        display: block;
+        /* No flex on mobile to prevent squishing */
+    }
+
+    /* --- 2. SIDEBAR - FORCE HIDDEN & STYLE RESET --- */
+    /* Target ALL possible states (collapsed, init-collapsed) to override them */
+    .sidebar,
+    .sidebar.collapsed,
+    html.sidebar-init-collapsed .sidebar {
+        position: fixed;
+        left: -105% !important;
+        /* Move fully off-screen */
+        width: 280px !important;
+        /* Always full specific width */
+        height: 100vh;
+        z-index: 9999;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        display: block !important;
+        top: 0;
+        padding: 20px !important;
+    }
+
+    /* ACTIVE STATE (Toggled via JS) */
+    .sidebar.mobile-active {
+        left: 0 !important;
+    }
+
+    /* RESTORE SIDEBAR CONTENT (Disable Mini-Mode styles) */
+    /* We force text and elements to be visible even if 'collapsed' class is present */
+    .sidebar.collapsed .sidebar-header .text,
+    html.sidebar-init-collapsed .sidebar-header .text,
+    .sidebar.collapsed .menu-title,
+    html.sidebar-init-collapsed .menu-title,
+    .sidebar.collapsed .menu-item span,
+    html.sidebar-init-collapsed .menu-item span {
+        opacity: 1 !important;
+        width: auto !important;
+        height: auto !important;
+        color: inherit !important;
+        display: inline-block !important;
+        /* Restore text visibility */
+        margin-left: 10px !important;
+        visibility: visible !important;
+    }
+
+    .sidebar.collapsed .sidebar-header img,
+    html.sidebar-init-collapsed .sidebar-header img {
+        display: block !important;
+        opacity: 1 !important;
+        width: 40px !important;
+    }
+
+    .sidebar.collapsed .menu-item,
+    html.sidebar-init-collapsed .menu-item {
+        justify-content: flex-start !important;
+        /* Left check */
+        padding: 12px 15px !important;
+    }
+
+    /* --- 3. MAIN CONTENT --- */
+    .main-content,
+    .main-content.expanded,
+    html.sidebar-init-collapsed .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px;
+        /* Reduce padding for mobile */
+    }
+
+    /* --- 4. HEADER --- */
+    .admin-header {
+        padding: 15px;
+        flex-wrap: nowrap;
+        gap: 15px;
+        border-radius: 0 0 15px 15px;
+        /* Round bottom corners */
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        /* Below sidebar, above content */
+    }
+
+    .header-left {
+        flex: 1;
+        min-width: 0;
+        /* Allow shrinkage */
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .btn-mobile-toggle {
+        display: flex;
+        /* Show the 3-lines button */
+        align-items: center;
+        justify-content: center;
+        background: #f0f2f5;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        color: #333;
+    }
+
+    .page-title-text {
+        font-size: 1.1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 0;
+    }
+
+    .btn-toggle-sidebar {
+        display: none !important;
+    }
+
+    /* Hide the desktop sidebar toggle */
+    .admin-profile span {
+        display: none;
+    }
+
+    /* Hide admin name */
+
+    /* --- 5. CARD VIEW FOR TABLES (App-Like) --- */
+    .table-custom {
+        display: block;
+        border: 0;
+    }
+
+    .table-custom thead {
+        display: none;
+        /* Hide Table Header */
+    }
+
+    .table-custom tbody,
+    .table-custom tr,
+    .table-custom td {
+        display: block;
+        width: 100%;
+    }
+
+    .table-custom tr {
+        background: #fff;
+        margin-bottom: 20px;
+        padding: 0;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        /* Card Shadow */
+        border: 1px solid #f0f0f0;
+        overflow: hidden;
+        /* For image bg */
+    }
+
+    .table-custom td {
+        padding: 10px 15px;
+        border-bottom: 1px solid #f9f9f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95rem;
+        color: #555;
+    }
+
+    .table-custom td:last-child {
+        border-bottom: 0;
+        padding: 15px;
+        background: #fbfbfb;
+        /* Action area highlight */
+        justify-content: center;
+        gap: 10px;
+    }
+
+    /* SMART IMAGE HANDLING */
+    /* If a cell has an IMG, make it a full-width banner or dominant thumbnail */
+    .table-custom td:has(img) {
+        justify-content: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+    }
+
+    .table-custom td img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Highlight ID */
+    .table-custom td:first-child {
+        background: #89CFF0;
+        color: white;
+        font-weight: bold;
+        font-size: 0.8rem;
+        padding: 5px 15px;
+        display: inline-block;
+        width: auto;
+        border-radius: 0 0 10px 0;
+        /* Corner tag style */
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+
+    /* Space for the ID tag */
+    .table-custom tr {
+        padding-top: 0;
+        position: relative;
+    }
+
+    /* Buttons */
+    .btn-action {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+        overflow-x: auto;
+        padding-bottom: 5px;
+        white-space: nowrap;
+    }
+
+    /* Grid adjustments */
+    .row-2 {
+        grid-template-columns: 1fr;
+    }
+}

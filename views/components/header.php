@@ -31,7 +31,6 @@ if (isset($_SESSION['user_id'])) {
         $stmt2->execute();
         $row2 = $stmt2->fetch(PDO::FETCH_ASSOC);
         $orderCount = $row2['total'];
-
     } catch (Exception $e) {
         // Silent error jika terjadi konflik koneksi
         $cartCount = 0;
@@ -49,41 +48,51 @@ if (isset($_SESSION['user_id'])) {
                 <span class="brand-sub">By KNine</span>
             </div>
         </div>
-        
+
         <div class="search-bar">
-            <input type="text" placeholder="Search...">
-            <button><i class="fas fa-search"></i></button>
+            <form action="index.php#menu" method="GET" style="display: flex; width: 100%; align-items: center;">
+                <input type="text" name="search" id="searchInput" placeholder="Search menu..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+                <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
+                    <a href="index.php#menu" id="clearSearch"><i class="fas fa-times"></i></a>
+                <?php endif; ?>
+                <button type="submit" id="searchBtn"><i class="fas fa-search"></i></button>
+            </form>
         </div>
 
         <div class="user-actions">
-            
-            <a href="index.php?action=cart" class="icon-link" id="cartBtn" 
-               data-login="<?= isset($_SESSION['nama_user']) ? 'true' : 'false' ?>">
-               <i class="fas fa-shopping-cart"></i>
-               
-               <span class="icon-badge <?= ($cartCount > 0) ? '' : 'hidden' ?>" id="cartBadge">
-                   <?= $cartCount ?>
-               </span>
+            <!-- Actions Content -->
+            <a href="index.php?action=cart" class="icon-link" id="cartBtn"
+                data-login="<?= isset($_SESSION['nama_user']) ? 'true' : 'false' ?>">
+                <i class="fas fa-shopping-cart"></i>
+
+                <span class="icon-badge <?= ($cartCount > 0) ? '' : 'hidden' ?>" id="cartBadge">
+                    <?= $cartCount ?>
+                </span>
             </a>
-            
-            <?php if(isset($_SESSION['nama_user'])): ?>
-                
+
+            <?php if (isset($_SESSION['nama_user'])): ?>
+
                 <a href="index.php?action=my_orders" class="icon-link" title="Pesanan Saya">
-                    <i class="fas fa-receipt"></i> <?php if($orderCount > 0): ?>
+                    <i class="fas fa-receipt"></i> <?php if ($orderCount > 0): ?>
                         <span class="icon-badge"><?= $orderCount ?></span>
                     <?php endif; ?>
                 </a>
 
-                <span style="font-weight:bold; font-size: 0.9rem;">
-                    Hai, <?= (strlen($_SESSION['nama_user']) > 10) ? substr($_SESSION['nama_user'], 0, 10).'...' : $_SESSION['nama_user'] ?>
+                <span class="user-name-display" style="font-weight:bold; font-size: 0.9rem;">
+                    Hai, <?= (strlen($_SESSION['nama_user']) > 10) ? substr($_SESSION['nama_user'], 0, 10) . '...' : $_SESSION['nama_user'] ?>
                 </span>
                 <a href="index.php?action=logout" class="btn-signin" style="background:#ff6b6b; color:white;">Logout</a>
-            
+
             <?php else: ?>
                 <button class="btn-signin" id="openLoginBtn">Sign In / Sign Up</button>
             <?php endif; ?>
-            
+
             <a href="#" class="icon-link"><i class="fas fa-user"></i></a>
+
+            <!-- Mobile Menu Toggle -->
+            <div class="menu-toggle" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </div>
         </div>
 
         <nav class="nav-links">
@@ -91,7 +100,7 @@ if (isset($_SESSION['user_id'])) {
             <a href="index.php#menu">Menu</a>
             <a href="index.php#produk">Produk</a>
             <a href="index.php#contact">Contact</a>
-            <div class="nav-indicator"></div> 
+            <div class="nav-indicator"></div>
         </nav>
     </div>
 </header>
