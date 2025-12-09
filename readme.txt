@@ -1,3 +1,1 @@
-halo aku rakan
-untuk latihan git
-
+Project web untuk UMKM Pisang Hoheng
