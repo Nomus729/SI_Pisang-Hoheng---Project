@@ -63,6 +63,13 @@ class HomeController
             $whereSql = "WHERE " . implode(" AND ", $whereClauses);
         }
 
+        // --- OPTIMIZATION FIX: Hitung jumlah kategori untuk badge ---
+        $stmtMak = $db->query("SELECT COUNT(*) FROM produk WHERE kategori = 'Makanan'");
+        $countMak = $stmtMak->fetchColumn();
+
+        $stmtMin = $db->query("SELECT COUNT(*) FROM produk WHERE kategori = 'Minuman'");
+        $countMin = $stmtMin->fetchColumn();
+
         // Hitung total produk makanan (dengan filter jika ada)
         $queryCount = "SELECT COUNT(*) as total FROM produk $whereSql";
         $stmtCount = $db->prepare($queryCount);
@@ -85,8 +92,8 @@ class HomeController
         $menu_items = $stmtMenu->fetchAll(PDO::FETCH_ASSOC);
 
 
-        // --- 2. AMBIL SEMUA PRODUK UNTUK SLIDER BAWAH ---
-        $queryProduk = "SELECT * FROM produk ORDER BY created_at DESC";
+        // --- 2. AMBIL SEMUA PRODUK UNTUK SLIDER BAWAH (OPTIMIZED: LIMIT 10) ---
+        $queryProduk = "SELECT * FROM produk ORDER BY created_at DESC LIMIT 10";
 
         $stmtProduk = $db->prepare($queryProduk);
         $stmtProduk->execute();

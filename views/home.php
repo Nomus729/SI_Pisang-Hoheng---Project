@@ -63,7 +63,7 @@
                         <span class="cat-count"><?= $data['cat_counts']['makanan'] ?> Pilihan Menu</span>
                         <a href="index.php?kategori=makanan#menu" class="btn-cat-link">Lihat Menu <i class="fas fa-chevron-right"></i></a>
                     </div>
-                    <img src="https://placehold.co/100x100/ffa500/fff?text=F" class="cat-img">
+                    <img src="https://placehold.co/100x100/ffa500/fff?text=F" class="cat-img" loading="lazy">
                 </div>
                 <div class="category-card card-blue-light">
                     <div class="cat-content">
@@ -71,7 +71,7 @@
                         <span class="cat-count"><?= $data['cat_counts']['minuman'] ?> Pilihan Menu</span>
                         <a href="index.php?kategori=minuman#menu" class="btn-cat-link">Lihat Menu <i class="fas fa-chevron-right"></i></a>
                     </div>
-                    <img src="https://placehold.co/80x100/8B4513/fff?text=D" class="cat-img">
+                    <img src="https://placehold.co/80x100/8B4513/fff?text=D" class="cat-img" loading="lazy">
                 </div>
             </div>
         </section>
@@ -99,7 +99,7 @@
                         <div class="swiper-slide">
                             <div class="prod-card-fixed">
                                 <div class="prod-circle-img">
-                                    <img src="uploads/<?= $prod['gambar'] ?>" alt="Produk" onerror="this.src='https://placehold.co/150x150?text=Produk'">
+                                    <img src="uploads/<?= $prod['gambar'] ?>" alt="Produk" onerror="this.src='https://placehold.co/150x150?text=Produk'" loading="lazy">
                                 </div>
                                 <div class="prod-card-content">
                                     <h3><?= $prod['nama_produk'] ?></h3>

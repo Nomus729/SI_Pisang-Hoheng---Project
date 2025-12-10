@@ -84,8 +84,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     mm.add("(min-width: 901px)", () => {
 
-        // 1. Toggle Class .sticky menggunakan Event Listener Standar (Desktop Only)
-        window.addEventListener("scroll", handleDesktopScroll);
+        // 1. Toggle Class .sticky menggunakan Event Listener Standar (Desktop Only) - OPTIMIZED
+        let ticking = false;
+        window.addEventListener("scroll", function () {
+            if (!ticking) {
+                window.requestAnimationFrame(function () {
+                    handleDesktopScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
 
         function handleDesktopScroll() {
             const header = document.querySelector(".main-header");
