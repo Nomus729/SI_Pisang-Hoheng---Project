@@ -305,104 +305,141 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
-    // 8. ADD TO CART (DARI MENU UTAMA) - REVISI
+    // 8 & 9. GLOBAL HANDLER FOR CART & MENU ACTIONS (ROBUST FIX)
     // =========================================
-    const menuGrid = document.querySelector('.menu-grid');
 
-    if (menuGrid) {
-        menuGrid.addEventListener('click', function (e) {
+    // Variable to prevent double-submission (Timestamp Debounce)
+    let lastAddToCartTime = 0;
 
-            // A. Handle Tombol Plus (+)
-            if (e.target.classList.contains('btn-plus')) {
-                e.stopPropagation(); // Mencegah klik tembus
-                const qtySpan = e.target.previousElementSibling;
-                let val = parseInt(qtySpan.innerText);
+    document.body.addEventListener('click', function (e) {
+        const target = e.target;
+
+        // --- A. MENU: ADD TO CART (+/- handled locally in UI, but Add button here) ---
+        const cartBtn = target.closest('.add-to-cart-btn');
+        if (cartBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const now = Date.now();
+            if (now - lastAddToCartTime < 1000) return; // Ignore clicks within 1 second
+            lastAddToCartTime = now;
+
+            // Visual feedback - Disable button
+            if (cartBtn.disabled) return;
+            cartBtn.disabled = true;
+
+            const name = cartBtn.getAttribute('data-name');
+            const price = cartBtn.getAttribute('data-price');
+            const image = cartBtn.getAttribute('data-image');
+
+            // Find Qty
+            const cardActions = cartBtn.parentElement;
+            const qtySpan = cardActions.querySelector('.qty-val');
+            let qtyVal = 1;
+            if (qtySpan) {
+                qtyVal = parseInt(qtySpan.innerText) || 1;
+            }
+
+            fetch('index.php?action=add_to_cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, price: price, qty: qtyVal, image: image })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    cartBtn.disabled = false;
+                    if (data.status === 'success') {
+                        const badge = document.getElementById('cartBadge');
+                        if (badge) {
+                            let currentCount = parseInt(badge.innerText) || 0;
+                            badge.innerText = currentCount + qtyVal;
+                            badge.classList.remove('hidden');
+                        }
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: 'Berhasil masuk keranjang.',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Gagal',
+                            text: data.message,
+                            confirmButtonColor: '#89CFF0'
+                        }).then(() => {
+                            if (data.message && data.message.toLowerCase().includes('login') && typeof modal !== 'undefined') {
+                                modal.style.display = "flex";
+                                if (typeof registerFormBox !== 'undefined') registerFormBox.classList.add("hidden");
+                                if (typeof loginFormBox !== 'undefined') loginFormBox.classList.remove("hidden");
+                            }
+                        });
+                    }
+                })
+                .catch(err => {
+                    cartBtn.disabled = false;
+                    console.error(err);
+                });
+            return;
+        }
+
+        // --- B. MENU: BUTTON PLUS MINUS ---
+        if (target.classList.contains('btn-plus')) {
+            e.preventDefault();
+            const qtySpan = target.previousElementSibling;
+            if (qtySpan) {
+                let val = parseInt(qtySpan.innerText) || 1;
                 qtySpan.innerText = val + 1;
-                return; // Stop disini
             }
+            return;
+        }
 
-            // B. Handle Tombol Minus (-)
-            if (e.target.classList.contains('btn-minus')) {
-                e.stopPropagation();
-                const qtySpan = e.target.nextElementSibling;
-                let val = parseInt(qtySpan.innerText);
-                if (val > 1) {
-                    qtySpan.innerText = val - 1;
-                }
-                return; // Stop disini
+        if (target.classList.contains('btn-minus')) {
+            e.preventDefault();
+            const qtySpan = target.nextElementSibling;
+            if (qtySpan) {
+                let val = parseInt(qtySpan.innerText) || 1;
+                if (val > 1) qtySpan.innerText = val - 1;
             }
-            if (e.target.classList.contains('btn-plus')) { /*...*/ }
-            if (e.target.classList.contains('btn-minus')) { /*...*/ }
-            // C. Klik Tombol Keranjang (Kirim ke Database)
-            const cartBtn = e.target.closest('.add-to-cart-btn');
-            if (cartBtn) {
-                e.preventDefault();
+            return;
+        }
 
-                const name = cartBtn.getAttribute('data-name');
-                const price = cartBtn.getAttribute('data-price');
-                const image = cartBtn.getAttribute('data-image');
+        // 2. Qty Update (+/-)
+        if (target.classList.contains('cart-qty-btn')) {
+            const card = target.closest('.cart-item-card');
+            if (!card) return;
 
-                // Ambil angka Qty dari elemen saudaranya
-                const cardActions = cartBtn.parentElement;
-                const qtySpan = cardActions.querySelector('.qty-val');
-                const qtyVal = parseInt(qtySpan.innerText); // Pastikan Integer
+            const cartId = card.getAttribute('data-id');
+            const qtySpan = card.querySelector('.cart-qty-val');
+            const action = target.getAttribute('data-action');
+            let currentQty = parseInt(qtySpan.innerText);
+            let newQty = currentQty;
 
-                fetch('index.php?action=add_to_cart', {
+            if (action === 'increase') newQty++;
+            else if (action === 'decrease' && newQty > 1) newQty--;
+
+            if (newQty !== currentQty) {
+                target.disabled = true;
+                qtySpan.innerText = newQty;
+                if (typeof recalculateCart === 'function') recalculateCart();
+
+                fetch('index.php?action=update_cart', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name, price: price, qty: qtyVal, image: image })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            const badge = document.getElementById('cartBadge');
-                            if (badge) {
-                                // Ambil angka sekarang, tambah dengan qty baru
-                                let currentCount = parseInt(badge.innerText) || 0;
-                                let newCount = currentCount + parseInt(qtyVal);
-
-                                badge.innerText = newCount;
-                                badge.classList.remove('hidden'); // Munculkan jika tadinya sembunyi
-                            }
-                            // Reset Qty jadi 1 setelah berhasil
-                            //qtySpan.innerText = "1";
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: 'Berhasil masuk keranjang.',
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Gagal',
-                                text: data.message,
-                                confirmButtonColor: '#89CFF0'
-                            }).then(() => {
-                                if (data.message.includes('login') && modal) {
-                                    modal.style.display = "flex";
-                                }
-                            });
-                        }
-                    });
+                    body: JSON.stringify({ cart_id: cartId, qty: newQty })
+                }).then(() => {
+                    target.disabled = false;
+                });
             }
-        });
-    }
+        }
+    });
 
-
-    // =========================================
-    // 9. HALAMAN KERANJANG (UPDATE & DELETE)
-    // =========================================
-    const cartContainer = document.querySelector('.cart-items-container');
-
-    // Format Rupiah
+    // Helper functions for Cart
     const formatRupiah = (angka) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
     };
 
-    // Hitung Ulang Total
     function recalculateCart() {
         let total = 0;
         let totalQty = 0;
@@ -410,7 +447,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         items.forEach(item => {
             const price = parseInt(item.getAttribute('data-price'));
-            const qty = parseInt(item.querySelector('.cart-qty-val').innerText);
+            const qtyEl = item.querySelector('.cart-qty-val');
+            const qty = qtyEl ? parseInt(qtyEl.innerText) : 0;
             total += price * qty;
             totalQty += qty;
         });
@@ -422,92 +460,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (totalQtyEl) totalQtyEl.innerText = totalQty + " Pcs";
 
         if (items.length === 0) setTimeout(() => location.reload(), 500);
-    }
-
-    if (cartContainer) {
-        cartContainer.addEventListener('click', function (e) {
-            const target = e.target;
-            const card = target.closest('.cart-item-card');
-            if (!card) return;
-
-            const cartId = card.getAttribute('data-id');
-            const qtySpan = card.querySelector('.cart-qty-val');
-
-            // A. Tombol Tambah/Kurang di Cart
-            if (target.classList.contains('cart-qty-btn')) {
-                let currentQty = parseInt(qtySpan.innerText);
-                const action = target.getAttribute('data-action');
-                let newQty = currentQty;
-
-                if (action === 'increase') newQty++;
-                else if (action === 'decrease' && newQty > 1) newQty--;
-
-                if (newQty !== currentQty) {
-                    qtySpan.innerText = newQty; // Update UI langsung
-                    recalculateCart(); // Update Total Harga
-
-                    // Kirim ke Database
-                    fetch('index.php?action=update_cart', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ cart_id: cartId, qty: newQty })
-                    });
-                }
-            }
-
-            // B. Tombol Hapus (Trash)
-            // B. Tombol Hapus (Trash) - DIPERBAIKI
-            if (target.closest('.cart-remove-btn') || target.classList.contains('cart-remove-btn')) {
-                const card = target.closest('.cart-item-card');
-                if (!card) return;
-
-                const cartId = card.getAttribute('data-id');
-
-                Swal.fire({
-                    title: 'Hapus item?',
-                    text: "Item akan dihapus permanen dari keranjang.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch('index.php?action=remove_item', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ cart_id: cartId })
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.status === 'success') {
-                                    card.style.transition = "all 0.4s ease";
-                                    card.style.opacity = "0";
-                                    card.style.transform = "translateX(50px)";
-                                    setTimeout(() => {
-                                        card.remove();
-                                        recalculateCart();
-                                        Swal.fire({
-                                            title: 'Terhapus!',
-                                            text: 'Item telah dihapus dari keranjang.',
-                                            icon: 'success',
-                                            timer: 1500,
-                                            showConfirmButton: false
-                                        });
-                                    }, 400);
-                                } else {
-                                    Swal.fire('Gagal', 'Tidak dapat menghapus item.', 'error');
-                                }
-                            })
-                            .catch(err => {
-                                console.error(err);
-                                Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
-                            });
-                    }
-                });
-            }
-        });
     }
 
     // =========================================
@@ -649,56 +601,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         // D. Fix Add to Cart for AJAX Content (Delegation)
-        menuContainer.addEventListener('click', function (e) {
-            // A. Plus
-            if (e.target.classList.contains('btn-plus')) {
-                e.stopPropagation();
-                const qtySpan = e.target.previousElementSibling;
-                let val = parseInt(qtySpan.innerText);
-                qtySpan.innerText = val + 1;
-                return;
-            }
-            // B. Minus
-            if (e.target.classList.contains('btn-minus')) {
-                e.stopPropagation();
-                const qtySpan = e.target.nextElementSibling;
-                let val = parseInt(qtySpan.innerText);
-                if (val > 1) qtySpan.innerText = val - 1;
-                return;
-            }
-            // C. Add to Cart
-            const cartBtn = e.target.closest('.add-to-cart-btn');
-            if (cartBtn) {
-                e.preventDefault();
-                const name = cartBtn.getAttribute('data-name');
-                const price = cartBtn.getAttribute('data-price');
-                const image = cartBtn.getAttribute('data-image');
-                const cardActions = cartBtn.parentElement;
-                const qtySpan = cardActions.querySelector('.qty-val');
-                const qtyVal = parseInt(qtySpan.innerText);
-
-                fetch('index.php?action=add_to_cart', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name, price: price, qty: qtyVal, image: image })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            const badge = document.getElementById('cartBadge');
-                            if (badge) {
-                                let currentCount = parseInt(badge.innerText) || 0;
-                                badge.innerText = currentCount + qtyVal;
-                                badge.classList.remove('hidden');
-                            }
-                            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Berhasil masuk keranjang.', showConfirmButton: false, timer: 1500 });
-                        } else {
-                            Swal.fire({ icon: 'warning', title: 'Gagal', text: data.message, confirmButtonColor: '#89CFF0' })
-                                .then(() => { if (data.message.includes('login') && modal) modal.style.display = "flex"; });
-                        }
-                    });
-            }
-        });
+        // Redundant listener removed to prevent double submission.
+        // The global document.body listener handles all clicks.
     }
 
 });
