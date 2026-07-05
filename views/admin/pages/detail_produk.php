@@ -64,7 +64,7 @@
             <input type="file" name="gambar" id="imgInp" accept="image/*" <?= isset($data['gambar']) ? '' : 'required' ?>>
 
             <div style="margin-top: 10px;">
-                <img id="blah" src="<?= isset($data['gambar']) ? 'uploads/' . $data['gambar'] : 'https://placehold.co/150x150?text=Preview' ?>"
+                <img id="blah" src="<?= isset($data['gambar']) ? 'uploads/' . $data['gambar'] : 'public/img/default-food.svg' ?>"
                     width="150" height="150" style="object-fit: cover; border-radius: 10px; border: 1px solid #ddd;">
             </div>
         </div>

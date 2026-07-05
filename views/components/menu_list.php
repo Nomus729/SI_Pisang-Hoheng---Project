@@ -3,7 +3,7 @@
         <?php foreach ($data['menu_items'] as $item): ?>
             <div class="menu-card">
                 <div class="card-img">
-                    <img src="uploads/<?= $item['gambar'] ?>" alt="<?= $item['nama_produk'] ?>" onerror="this.src='https://placehold.co/200x150'">
+                    <img src="uploads/<?= $item['gambar'] ?>" alt="<?= $item['nama_produk'] ?>" onerror="this.src='public/img/default-food.svg'">
                 </div>
                 <div class="card-body">
                     <h4><?= $item['nama_produk'] ?></h4>

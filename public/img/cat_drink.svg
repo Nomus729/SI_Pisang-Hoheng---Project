@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <circle cx="50" cy="50" r="45" fill="#e6f2ff"/>
+  <!-- Drink Icon: stylized cup with straw -->
+  <path d="M 35 35 L 40 80 A 5 5 0 0 0 45 85 L 55 85 A 5 5 0 0 0 60 80 L 65 35 Z" fill="#3399ff"/>
+  <rect x="30" y="30" width="40" height="8" rx="3" fill="#1a75ff"/>
+  <path d="M 55 30 L 65 10 L 70 12 L 60 30" fill="#ff3333"/>
+</svg>

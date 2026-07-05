@@ -1,6 +1,13 @@
 <?php
-// Load file database
-require_once 'config/Database.php';
+// Load Composer Autoloader & Environment Configuration
+require_once __DIR__ . '/vendor/autoload.php';
+
+if (file_exists(__DIR__ . '/.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
+}
+
+use App\Config\Database;
 
 //  ke Database
 $database = new Database();

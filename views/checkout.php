@@ -110,7 +110,7 @@
 
                     <div id="qrisBox" class="qris-box hidden">
                         <p>Scan QR Code di bawah ini:</p>
-                        <img src="https://placehold.co/200x200/fff/000?text=QRIS+CODE" alt="QRIS">
+                        <img src="public/img/qris_mockup.svg" alt="QRIS" style="max-width: 200px; height: auto;">
                     </div>
                 </div>
 

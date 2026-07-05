@@ -1,6 +1,9 @@
 <?php
-require_once 'config/Database.php';
-require_once 'models/Cart.php';
+namespace App\Controllers;
+
+use App\Config\Database;
+use App\Models\Cart;
+use PDO;
 
 class CartController {
     

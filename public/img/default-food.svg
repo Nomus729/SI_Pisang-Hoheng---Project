@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150">
+  <rect width="200" height="150" fill="#f8f9fa"/>
+  <circle cx="100" cy="75" r="40" fill="#fff3cd" stroke="#ffeeba" stroke-width="2"/>
+  <!-- Stylized banana or food icon inside circle -->
+  <path d="M 85 85 C 95 85, 115 75, 115 60 C 115 57, 112 55, 110 57 C 107 59, 98 75, 85 78 Z" fill="#ffc107"/>
+  <text x="100" y="130" font-family="Arial, sans-serif" font-size="12" fill="#856404" font-weight="bold" text-anchor="middle">No Image</text>
+</svg>

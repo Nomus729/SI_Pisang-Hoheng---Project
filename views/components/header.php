@@ -12,8 +12,7 @@ if (isset($_SESSION['user_id'])) {
     // Buat koneksi database khusus untuk header
     // Kita gunakan try-catch agar jika file database sudah di-require sebelumnya tidak error
     try {
-        require_once 'config/Database.php';
-        $db_header = (new Database())->getConnection();
+        $db_header = (new \App\Config\Database())->getConnection();
         $uid = $_SESSION['user_id'];
 
         // 1. HITUNG JUMLAH BARANG DI KERANJANG (SUM QTY)

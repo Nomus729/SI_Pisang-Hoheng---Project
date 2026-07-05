@@ -1,16 +1,26 @@
 <?php
-// 1. Wajib ditaruh paling atas untuk menangani login/logout
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start([
+        'cookie_lifetime' => 86400,
+        'cookie_secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'cookie_httponly' => true,
+        'cookie_samesite' => 'Lax'
+    ]);
+}
 ob_start(); // Mencegah error "Cannot modify header info"
 
-// 2. Load Controllers
-require_once 'controllers/HomeController.php';
-require_once 'controllers/AuthController.php';
-require_once 'controllers/AdminController.php';
-if (file_exists('controllers/CartController.php')) {
-    require_once 'controllers/CartController.php';
+// 2. Load Composer Autoloader & Environment Configuration
+require_once __DIR__ . '/vendor/autoload.php';
+
+if (file_exists(__DIR__ . '/.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
 }
 
+use App\Controllers\HomeController;
+use App\Controllers\AuthController;
+use App\Controllers\AdminController;
+use App\Controllers\CartController;
 
 // 3. Routing
 $action = isset($_GET['action']) ? $_GET['action'] : 'home';
@@ -32,38 +42,28 @@ switch ($action) {
         break;
 
     case 'cart':
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->index();
-        }
+        $cart = new CartController();
+        $cart->index();
         break;
 
     case 'checkout':
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->checkout();
-        }
+        $cart = new CartController();
+        $cart->checkout();
         break;
 
     case 'add_to_cart':
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->addToCart();
-        }
+        $cart = new CartController();
+        $cart->addToCart();
         break;
 
     case 'update_cart': // Routing Update
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->update_cart();
-        }
+        $cart = new CartController();
+        $cart->update_cart();
         break;
 
     case 'remove_item': // Routing Hapus
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->remove_item();
-        }
+        $cart = new CartController();
+        $cart->remove_item();
         break;
 
     case 'dashboard':
@@ -72,31 +72,18 @@ switch ($action) {
         break;
 
     case 'place_order':
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->place_order();
-        }
+        $cart = new CartController();
+        $cart->place_order();
         break;
 
     case 'my_orders':
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->my_orders();
-        }
+        $cart = new CartController();
+        $cart->my_orders();
         break;
 
     case 'reorder':
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->reorder();
-        }
-        break;
-
-    case 'reorder':
-        if (class_exists('CartController')) {
-            $cart = new CartController();
-            $cart->reorder();
-        }
+        $cart = new CartController();
+        $cart->reorder();
         break;
 
     case 'info':
@@ -111,3 +98,4 @@ switch ($action) {
 }
 
 ob_end_flush(); // Kirim output buffer
+?>

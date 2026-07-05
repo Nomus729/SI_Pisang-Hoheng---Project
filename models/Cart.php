@@ -1,4 +1,9 @@
 <?php
+namespace App\Models;
+
+use PDO;
+use Exception;
+
 class Cart {
     private $conn;
     private $table = "keranjang";

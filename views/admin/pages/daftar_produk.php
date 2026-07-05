@@ -23,7 +23,7 @@
                     <td>#<?= $row['kode_barang'] ?></td>
                     <td>
                         <img src="uploads/<?= $row['gambar'] ?>" width="50" height="50" style="object-fit:cover; border-radius:5px;" 
-                             onerror="this.src='https://placehold.co/50'">
+                             onerror="this.src='public/img/default-food.svg'">
                     </td>
                     <td><?= $row['nama_produk'] ?></td>
                     <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>

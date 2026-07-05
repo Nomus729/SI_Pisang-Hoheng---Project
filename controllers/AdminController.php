@@ -1,5 +1,13 @@
 <?php
-require_once 'config/Database.php';
+namespace App\Controllers;
+
+use App\Config\Database;
+use App\Models\Log;
+use PDO;
+use Exception;
+use DateTime;
+use DateInterval;
+use DatePeriod;
 
 class AdminController
 {
@@ -483,7 +491,6 @@ class AdminController
     }
     private function getLogs()
     {
-        require_once 'models/Log.php';
         $log = new Log($this->db);
         return $log->getAll();
     }
